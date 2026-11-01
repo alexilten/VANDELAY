@@ -67,6 +67,8 @@ export interface OptionGeometry {
     readonly boundary: readonly Point2[];
     readonly terrain: Terrain;
     readonly buildable?: readonly Point2[];
+    /** For sun studies only. */
+    readonly geo?: { readonly lat: number; readonly lon: number };
   };
   readonly solids: readonly Solid[];
   readonly plants?: readonly Plant[];

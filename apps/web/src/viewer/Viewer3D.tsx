@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { CanvasTexture, DoubleSide, Euler, Object3D, PlaneGeometry, Vector3, type Group, type Mesh } from 'three';
 import { solidBounds, terrainZ, type OptionGeometry, type Point2, type Solid, type Terrain } from './geometry';
 import { DARK, LIGHT, type ScenePalette } from './palette';
+import type { SunPosition } from './sun';
 import { useIsDark } from './useIsDark';
 
 // Vandelay is Z up everywhere. Set here, where three first loads, so it runs
@@ -19,9 +20,11 @@ type Props = {
   modelKey: string;
   /** Opens moving parts such as sliding shutters. */
   open?: boolean;
+  /** When set, light the scene from this sun position (a sun study). */
+  sun?: SunPosition | null;
 };
 
-export default function Viewer3D({ geometry, modelKey, open = true }: Props) {
+export default function Viewer3D({ geometry, modelKey, open = true, sun = null }: Props) {
   const dark = useIsDark();
   const palette = dark ? DARK : LIGHT;
   const frame = useMemo(() => frameFor(geometry), [geometry]);
@@ -35,11 +38,11 @@ export default function Viewer3D({ geometry, modelKey, open = true }: Props) {
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
       camera={{ fov: 30, near: frame.radius / 50, far: frame.radius * 40, position: frame.camera }}
     >
-      <hemisphereLight args={[palette.sky, palette.groundLight, palette.fill]} />
+      <hemisphereLight args={[palette.sky, palette.groundLight, sun && sun.elevation < 0 ? palette.fill * 0.4 : palette.fill]} />
       <directionalLight
         castShadow
-        position={[frame.center.x - frame.radius * 1.2, frame.center.y - frame.radius * 1.6, frame.center.z + frame.radius * 2.2]}
-        intensity={palette.sun}
+        position={sunLightPosition(frame, sun)}
+        intensity={sun ? palette.sun * Math.max(0, Math.min(1, Math.sin((sun.elevation * Math.PI) / 180) * 2.5)) : palette.sun}
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0004}
         shadow-camera-left={-frame.radius * 1.6}
@@ -76,6 +79,14 @@ export default function Viewer3D({ geometry, modelKey, open = true }: Props) {
       />
     </Canvas>
   );
+}
+
+/** Default: a high sun from the south-west. In a sun study: along the real sun direction. */
+function sunLightPosition(frame: Frame, sun: SunPosition | null): [number, number, number] {
+  const c = frame.center;
+  if (!sun) return [c.x - frame.radius * 1.2, c.y - frame.radius * 1.6, c.z + frame.radius * 2.2];
+  const d = frame.radius * 3;
+  return [c.x + sun.dir[0] * d, c.y + sun.dir[1] * d, c.z + Math.max(0.02, sun.dir[2]) * d];
 }
 
 // ── framing ──────────────────────────────────────────────────────────────────

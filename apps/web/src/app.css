@@ -48,6 +48,17 @@
 .v-viewer__hint { position: absolute; bottom: var(--v-space-3); left: 50%; transform: translateX(-50%); font-size: var(--v-text-fine); letter-spacing: 0; color: var(--v-color-ink-2); background: var(--v-glass-strong); border: 1px solid var(--v-color-hairline); border-radius: var(--v-radius-pill); padding: 4px 12px; pointer-events: none; transition: opacity 400ms ease; }
 .v-viewer__hint.is-hidden { opacity: 0; }
 
+/* Sun study */
+.v-sun { position: absolute; left: var(--v-space-3); bottom: var(--v-space-3); z-index: 2; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: var(--v-space-2); max-width: calc(100% - 24px); }
+.v-sun__toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; letter-spacing: 0; padding: 6px 12px; border-radius: var(--v-radius-pill); border: 1px solid var(--v-color-hairline); background: var(--v-glass-strong); backdrop-filter: var(--v-glass-blur-soft); -webkit-backdrop-filter: var(--v-glass-blur-soft); cursor: pointer; color: var(--v-color-ink); }
+.v-sun__toggle[aria-pressed="true"] { background: var(--v-color-ink); color: var(--v-color-bg); }
+.v-sun__toggle svg { color: #ff9f0a; }
+.v-sun__controls { display: flex; flex-direction: column; gap: var(--v-space-2); padding: var(--v-space-3); border-radius: 18px; background: color-mix(in srgb, var(--v-color-bg) 86%, transparent); border: 1px solid var(--v-glass-edge); box-shadow: var(--v-shadow); backdrop-filter: var(--v-glass-blur); -webkit-backdrop-filter: var(--v-glass-blur); }
+.v-sun__controls .v-seg button { font-size: 12px; padding: 4px 10px; }
+.v-sun__time { display: flex; align-items: center; gap: var(--v-space-3); font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.v-sun__time span { min-width: 64px; }
+.v-sun__time input { flex: 1; min-width: 140px; accent-color: #ff9f0a; }
+
 /* Checks chip and "why?" panel */
 .v-checks { position: absolute; top: var(--v-space-3); right: var(--v-space-3); bottom: var(--v-space-3); z-index: 2; display: flex; flex-direction: column; align-items: flex-end; max-width: min(380px, calc(100% - 24px)); pointer-events: none; }
 .v-checks > * { pointer-events: auto; }
@@ -134,9 +145,10 @@
   .v-work__cta .v-btn { padding: 10px 18px; font-size: 15px; white-space: nowrap; }
   .v-viewer { flex: none; height: 220px; min-height: 0; }
   .v-work__options { margin-bottom: 72px; }
-  .v-viewer__tags { top: auto; bottom: var(--v-space-3); }
+  .v-viewer__tags { top: var(--v-space-3); }
+  .v-checks { top: auto; bottom: var(--v-space-3); right: var(--v-space-3); }
+  .v-sun__toggle { font-size: 12px; padding: 5px 10px; }
   .v-viewer__hint { display: none; }
-  .v-checks { bottom: auto; }
   .v-checks__panel { position: fixed; left: 12px; right: 12px; bottom: 12px; width: auto; max-height: 62vh; z-index: 50; background: var(--v-color-bg); }
   .v-work__side { gap: var(--v-space-3); }
   .v-widget { border-radius: 22px; }
