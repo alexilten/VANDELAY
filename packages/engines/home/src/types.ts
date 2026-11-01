@@ -68,7 +68,8 @@ export interface Pier {
   readonly module: string;
 }
 
-export type CheckStatus = 'pass' | 'warn' | 'fail' | 'review';
+/** 'n/a' = the rule was skipped, and the message says why. */
+export type CheckStatus = 'pass' | 'warn' | 'fail' | 'review' | 'n/a';
 
 export interface CheckResult {
   readonly ruleId: string;
@@ -78,7 +79,7 @@ export interface CheckResult {
   readonly limit?: number;
 }
 
-export type ScoreId = 'view' | 'sun' | 'privacy' | 'cost' | 'lessGrading' | 'overall';
+export type ScoreId = 'view' | 'sun' | 'privacy' | 'cost' | 'lessGrading' | 'access' | 'overall';
 
 export interface HomeResult {
   readonly ok: true;

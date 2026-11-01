@@ -11,7 +11,12 @@ export interface EngineInfo {
 export const homeEngine: EngineInfo = {
   id: 'home',
   category: 'home',
-  version: '0.0.0',
-  status: 'stub',
+  version: '0.1.0',
+  status: 'experimental',
 };
+
 export * from './types.ts';
+export { EXAMPLE_CATALOG, MATERIALS, findCatalog, type Catalog, type MaterialSpec, type ModuleSpec } from './catalog.ts';
+export { RULES, type Rule, type RuleId } from './rules.ts';
+export { ENGINE_VERSION, evaluateWithDefaults } from './evaluate.ts';
+export { evaluate, proposeOptions, resolveIntent, type SearchOptions } from './options.ts';
