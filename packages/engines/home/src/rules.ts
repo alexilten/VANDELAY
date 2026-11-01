@@ -31,7 +31,7 @@ export const RULES = {
   },
   'vandelay.assumption.height-measurement': {
     id: 'vandelay.assumption.height-measurement', topic: 'Height', kind: 'assumption', source: `${INTENT}; measuring method is an assumption`, verification: 'n/a',
-    statement: 'Highest roof point, measured above the lowest existing grade under the footprint, is at or under the zoning height.',
+    statement: 'Building height is at or under the zoning height. Measured by the intent\'s zoning heightMethod: above the lowest existing grade under the footprint (default), or above the grade directly below each part of the roof.',
   },
   'vandelay.zoning.coverage': {
     id: 'vandelay.zoning.coverage', topic: 'Lot coverage', kind: 'governing', source: INTENT, verification: 'n/a',

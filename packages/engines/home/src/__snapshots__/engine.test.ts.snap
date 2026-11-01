@@ -4,7 +4,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
 {
   "flat": [
     {
-      "hash": "439224b37362c5aaf511fdf0b1b0e91b14cf55dcf1b279b46384f2f466fe03d7",
+      "hash": "9120a1e9b7d0354e875014787b8deacdbfa830e293024ec908a3afe06217b542",
       "label": "L around a deck",
       "resolved": {
         "anchor": [
@@ -21,7 +21,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "ca724ccc538f8172c0ba7fa4103e8a871b68d9f16008e9282be2da81a044dcfb",
+      "hash": "80f86a02d390bdfba7d5935ae2de6eea64eebec83b0f5fabced2f669041541cc",
       "label": "Courtyard",
       "resolved": {
         "anchor": [
@@ -38,7 +38,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "2ee4251c2f3ea78905bbc55c4be0fe9817c4546f7d8129a781c7054659ce5b1e",
+      "hash": "3cf2c227e0f1b8ecbfb067415451b7f7293566660b0f49782f7504245bea9e4c",
       "label": "Long bar on piers",
       "resolved": {
         "anchor": [
@@ -57,7 +57,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
   ],
   "slopeAlong": [
     {
-      "hash": "8f1ff04592458b9b5ae4ed6ff2bb7f9dd8ba24e342e09e174e8b53293e534d89",
+      "hash": "72ac9c0d71c50dca8ced6ef687c308055d11bb14541198d358bd890579a3c0c9",
       "label": "L around a deck",
       "resolved": {
         "anchor": [
@@ -74,7 +74,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "d5bfa8220288015f6af440b670371fad35c475ac502db0130f3f94f37565bdd6",
+      "hash": "c43cb5fb623990471ecccf8fa5a9f6c2091bbef8a6de2e8e9728c758d32dec11",
       "label": "Courtyard",
       "resolved": {
         "anchor": [
@@ -91,7 +91,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "2be757aaec605656c018e33afe32955b583ab8b8ce0736fbf91a996f157fd555",
+      "hash": "8d5d9b09b61e7f75992ca2169e732eb4f0fdcce9e50a65554e983e02de6c8be6",
       "label": "Stepped bar down the slope",
       "resolved": {
         "anchor": [
@@ -113,7 +113,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
   ],
   "slopeCross": [
     {
-      "hash": "e9c850734450dd76bed0f7d52f42db2d54362dc1abbc732ad4934f9b334fa31d",
+      "hash": "217ccf2d7ca5ed7a921b2656e965999c5aa54dc7239c32dcb0b873cc63ef38d3",
       "label": "Stepped bar down the slope",
       "resolved": {
         "anchor": [
@@ -133,7 +133,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "68e1fa8843c6ac4a69b6af24a964f5fa3390f108c4f7d0a330984da624ace7ab",
+      "hash": "8a4a6c2ab521f7fb2a51bdfe509baf462bb19ed00ef2c53f9efa004be76002c5",
       "label": "Long bar on piers",
       "resolved": {
         "anchor": [
@@ -150,7 +150,7 @@ exports[`determinism > pins the example results (update the snapshot only on pur
       },
     },
     {
-      "hash": "06d729026df10c506fb3cd823e41683b13aec693a142a4691d8ed333305f49f1",
+      "hash": "f490a09acabc9fb72153beda717957918c8df39123280d7fb0f232e1c984fdab",
       "label": "Courtyard",
       "resolved": {
         "anchor": [
