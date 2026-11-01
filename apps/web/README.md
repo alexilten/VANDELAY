@@ -34,6 +34,22 @@ Inter as fallback, very little text and a full dark mode.
 - **Vertical mobile:** one column. Site and brief start collapsed to a one-line
   summary, the options swipe sideways, and the action bar stays at the bottom.
 
+## 3D viewer
+
+`src/viewer/` draws the chosen option live with React Three Fiber, lazy-loaded
+so three.js stays out of the first page load. It shows a 2D sketch while it
+loads, and wherever WebGL is missing.
+
+- `geometry.ts` is the contract: a site (boundary, terrain) and oriented boxes
+  in mm, site frame +X east, +Y north, Z up. The Home engine emits this shape.
+- `source.ts` is the one place the app asks for geometry. It returns example
+  geometry from `mock.ts` today; Home switches to `@vandelay/engine-home` when
+  that lands.
+- Buildings follow the project's architecture standard: timber volumes on
+  blackened steel piers, deep steel roof plates, glass toward the view,
+  weathered-steel accents and concrete where they meet the slope. Moving parts
+  (sliding shutters) animate. The UI around them stays Apple-neutral.
+
 ## Example data
 
 Every figure on screen comes from `src/data/examples.ts` and is labelled as an
