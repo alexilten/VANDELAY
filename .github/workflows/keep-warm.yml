@@ -1,0 +1,23 @@
+# Pings the hosted MCP server so Render's free tier does not put it to sleep.
+# Set the repository variable MCP_HEALTH_URL (Settings > Secrets and variables >
+# Actions > Variables), e.g. https://vandelay-mcp.onrender.com/health.
+# GitHub runs schedules on a best-effort basis and can be late; delete this
+# workflow once the server is on a paid plan.
+name: Keep MCP warm
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    if: ${{ vars.MCP_HEALTH_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - run: curl -fsS --max-time 90 --retry 2 "$URL"
+        env:
+          URL: ${{ vars.MCP_HEALTH_URL }}

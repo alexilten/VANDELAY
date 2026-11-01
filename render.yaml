@@ -1,0 +1,23 @@
+# Render Blueprint: the public Vandelay MCP endpoint.
+# In Render: New > Blueprint > pick this repo. Then set VANDELAY_SIGNING_KEY in the dashboard.
+services:
+  - type: web
+    name: vandelay-mcp
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: corepack enable && pnpm install --frozen-lockfile
+    startCommand: node apps/mcp/src/http.ts
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: HOST
+        value: 0.0.0.0
+      - key: VIEWER_URL
+        value: https://alexilten.github.io/VANDELAY/
+      # Ed25519 private key, PKCS#8 PEM. Secret: set it in the dashboard, never in git.
+      - key: VANDELAY_SIGNING_KEY
+        sync: false
