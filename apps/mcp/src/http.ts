@@ -7,7 +7,8 @@
  *   PORT=8787 node apps/mcp/src/http.ts
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import type { McpServer } from '@vandelay/agent';
+import { hashJson, type McpServer } from '@vandelay/agent';
+import { l402FromEnv, type L402 } from './l402.ts';
 import { createVandelayServer } from './server.ts';
 import { signerFromEnv, type PublicKeyInfo } from './signing.ts';
 
@@ -19,7 +20,22 @@ export interface HttpOptions {
   readonly allowedOrigins?: readonly string[];
   /** Published at /.well-known/vandelay-keys.json so anyone can check receipts offline. */
   readonly publicKey?: PublicKeyInfo;
+  /** Pay-per-call over Lightning. Off when undefined. */
+  readonly l402?: L402;
 }
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** The tool name and input of a tools/call, or undefined for anything else. */
+const toolCall = (text: string): { id: unknown; name: string; args: unknown } | undefined => {
+  try {
+    const m: unknown = JSON.parse(text);
+    if (!isObject(m) || m.method !== 'tools/call' || !isObject(m.params) || typeof m.params.name !== 'string') return undefined;
+    return { id: m.id ?? null, name: m.params.name, args: m.params.arguments ?? {} };
+  } catch {
+    return undefined;
+  }
+};
 
 const send = (res: ServerResponse, status: number, body?: unknown, headers: Record<string, string> = {}): void => {
   res.writeHead(status, body === undefined ? headers : { 'content-type': 'application/json', ...headers });
@@ -58,6 +74,24 @@ export const createHttpHandler = (mcp: McpServer, opts: HttpOptions = {}) =>
 
     const text = await readBody(req);
     if (text === undefined) return send(res, 413, { error: `body over ${MAX_BODY_BYTES} bytes` });
+
+    if (opts.l402) {
+      const call = toolCall(text);
+      if (call && opts.l402.priceSats(call.name) > 0) {
+        const inputHash = hashJson(call.args);
+        const auth = req.headers.authorization;
+        const verdict = opts.l402.check(auth, call.name, inputHash);
+        if (!verdict.ok) {
+          const c = await opts.l402.challenge(call.name, inputHash);
+          // The JSON-RPC error carries the same challenge for agents that read bodies, not headers.
+          return send(res, 402, {
+            jsonrpc: '2.0', id: call.id,
+            error: { code: -32042, message: `payment required: ${c.amountSats} sats for ${call.name}`, data: { l402: { macaroon: c.token, invoice: c.invoice, amountSats: c.amountSats, priceUsd: c.priceUsd }, reason: verdict.reason } },
+          }, { 'www-authenticate': c.header });
+        }
+      }
+    }
+
     const answer = mcp.handleText(text);
     return answer === undefined ? send(res, 202) : send(res, 200, answer);
   };
@@ -68,7 +102,8 @@ if (isMain) {
   const host = process.env.HOST ?? '127.0.0.1';
   const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
   const signer = signerFromEnv();
-  createServer(createHttpHandler(createVandelayServer(signer), { allowedOrigins, publicKey: signer.publicKey })).listen(port, host, () => {
-    process.stderr.write(`vandelay mcp on http://${host}:${port}/mcp, receipts signed by ${signer.publicKey.keyId}\n`);
+  const l402 = l402FromEnv();
+  createServer(createHttpHandler(createVandelayServer(signer, process.env.VIEWER_URL ? { viewerUrl: process.env.VIEWER_URL } : {}), { allowedOrigins, publicKey: signer.publicKey, ...(l402 ? { l402 } : {}) })).listen(port, host, () => {
+    process.stderr.write(`vandelay mcp on http://${host}:${port}/mcp, receipts signed by ${signer.publicKey.keyId}, payments ${l402 ? `L402 via ${l402.provider}` : 'off'}\n`);
   });
 }

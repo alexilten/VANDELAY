@@ -39,6 +39,22 @@ describe('signed receipts', () => {
   });
 });
 
+describe('approval links', () => {
+  it('carry only the receipt and input, and still verify with the link fields present', () => {
+    const viewer = createVandelayServer(signer, { viewerUrl: 'https://viewer.example/app/' });
+    const r = viewer.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'home_optionsFromPrompt', arguments: { prompt: 'a cabin' } } }) as { result: { structuredContent: { receipt: Receipt; approvalUrl: string } } };
+    const out = r.result.structuredContent;
+    const url = new URL(out.approvalUrl);
+    expect(url.origin + url.pathname).toBe('https://viewer.example/app/');
+    const params = new URLSearchParams(url.hash.slice(1));
+    expect(params.get('v')).toBe('0');
+    expect(JSON.parse(Buffer.from(params.get('receipt')!, 'base64url').toString())).toEqual(out.receipt);
+    expect(JSON.parse(Buffer.from(params.get('input')!, 'base64url').toString())).toEqual({ prompt: 'a cabin' });
+    expect(out.approvalUrl.length).toBeLessThan(3000);
+    expect(call('receipt_verify', { receipt: out.receipt, result: out }).structuredContent).toMatchObject({ ok: true, resultMatches: true });
+  });
+});
+
 describe('receipt_verify', () => {
   it('accepts an untouched receipt and result', () => {
     const out = options().structuredContent;

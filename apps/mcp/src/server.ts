@@ -27,7 +27,7 @@ export const verifyTool = (signer: Signer): Tool<{ receipt: Receipt; result?: Re
     type: 'object', required: ['receipt'],
     properties: {
       receipt: { type: 'object', description: 'The `receipt` object from a Vandelay result.' },
-      result: { type: 'object', description: 'Optional: the full structuredContent the receipt came with. Its `receipt` field is ignored.' },
+      result: { type: 'object', description: 'Optional: the full structuredContent the receipt came with. Its `receipt` and `approvalUrl` fields are ignored.' },
     },
   },
   run: ({ receipt, result }) => {
@@ -40,7 +40,7 @@ export const verifyTool = (signer: Signer): Tool<{ receipt: Receipt; result?: Re
 
     let resultMatches: boolean | undefined;
     if (result !== undefined) {
-      const { receipt: _ignored, ...rest } = isObject(result) ? result : {};
+      const { receipt: _r, approvalUrl: _a, ...rest } = isObject(result) ? result : {};
       resultMatches = hashJson(rest) === receipt?.resultHash;
       if (!resultMatches) problems.push('result does not hash to resultHash');
     }
@@ -52,8 +52,28 @@ export const verifyTool = (signer: Signer): Tool<{ receipt: Receipt; result?: Re
 /** Tools whose output is not signed: checking a receipt needs no receipt. */
 const UNSIGNED = new Set(['receipt.verify']);
 
-export const createVandelayServer = (signer: Signer): McpServer =>
+/**
+ * A link a person can open to see and approve exactly what the agent got.
+ * It carries only the receipt and the input: the viewer re-runs the
+ * deterministic tool and checks the result against `resultHash`, so the link
+ * stays small (results run to 100+ KB).
+ */
+export const approvalUrl = (viewerUrl: string, receipt: Receipt, input: unknown): string => {
+  const b64 = (v: unknown) => Buffer.from(JSON.stringify(v)).toString('base64url');
+  return `${viewerUrl.replace(/#.*$/, '')}#v=0&receipt=${b64(receipt)}&input=${b64(input)}`;
+};
+
+export interface VandelayServerOptions {
+  /** Where the approval viewer lives. When set, signed results carry an `approvalUrl`. */
+  readonly viewerUrl?: string;
+}
+
+export const createVandelayServer = (signer: Signer, opts: VandelayServerOptions = {}): McpServer =>
   createMcpServer({
     tools: [...homeTools, verifyTool(signer)] as unknown as readonly Tool<never, unknown>[],
-    decorate: (tool, input, result) => (UNSIGNED.has(tool) ? undefined : { receipt: signer.sign({ tool, input, result }) }),
+    decorate: (tool, input, result) => {
+      if (UNSIGNED.has(tool)) return undefined;
+      const receipt = signer.sign({ tool, input, result });
+      return opts.viewerUrl ? { receipt, approvalUrl: approvalUrl(opts.viewerUrl, receipt, input) } : { receipt };
+    },
   });
