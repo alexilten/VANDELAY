@@ -7,7 +7,7 @@
  * can register them as-is.
  */
 import {
-  createHomeIntent, getAt, patchHomeIntent, validateHomeIntent,
+  EXAMPLE_CA_LOT, EXAMPLE_SITES, createHomeIntent, getAt, patchHomeIntent, validateHomeIntent,
   type HomeIntent, type JsonPointer, type PatchOp, type SiteIntent,
 } from '@vandelay/kernel';
 import { evaluate, proposeOptions, type HomeError, type HomeOption, type HomeResult, type Traced } from '@vandelay/engine-home';
@@ -75,7 +75,26 @@ export const explainTool: Tool<{ result: HomeResult; path: JsonPointer }, { ok: 
   },
 };
 
-export const homeTools = [validateTool, evaluateTool, proposeTool, patchTool, explainTool] as const;
+export type ExampleSiteName = keyof typeof EXAMPLE_SITES;
+const EXAMPLE_SITE_NAMES = Object.keys(EXAMPLE_SITES) as ExampleSiteName[];
+
+export const promptTool: Tool<{ prompt: string; site?: ExampleSiteName }, { intent: HomeIntent; options: HomeOption[] | HomeError; fromPrompt: readonly string[]; site: string; note: string }> = {
+  name: 'home.optionsFromPrompt',
+  description: 'Three home options from a plain-language prompt, on an EXAMPLE California lot (state ADU rules apply). Start here when you have no intent yet. The site is example data until parcel lookup ships.',
+  inputSchema: {
+    type: 'object', required: ['prompt'],
+    properties: {
+      prompt: { type: 'string', minLength: 1, maxLength: 2000, description: 'What the person wants, in their words, e.g. "a one-bedroom backyard cottage for my mom, step-free".' },
+      site: { enum: EXAMPLE_SITE_NAMES, description: 'Which example lot to use. Default slopeAlong (falls 15% toward the street).' },
+    },
+  },
+  run: ({ prompt, site = 'slopeAlong' }) => {
+    const siteIntent: SiteIntent = { ...EXAMPLE_SITES[site], jurisdiction: EXAMPLE_CA_LOT };
+    return { ...optionsFromPrompt(prompt, siteIntent), site, note: `example site "${site}" with example California lot facts; not a real parcel` };
+  },
+};
+
+export const homeTools = [promptTool, validateTool, evaluateTool, proposeTool, patchTool, explainTool] as const;
 
 /**
  * The whole loop without a model: prompt → brief → intent → three options.

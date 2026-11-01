@@ -1,0 +1,15 @@
+{
+  "name": "@vandelay/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Serves the Vandelay engine tools to outside agents over MCP (stdio and Streamable HTTP).",
+  "scripts": {
+    "stdio": "node src/stdio.ts",
+    "http": "node src/http.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@vandelay/agent": "workspace:*"
+  }
+}
