@@ -67,7 +67,7 @@ export type RuleUnit = 'mm' | 'mm2' | 'ratio' | 'count';
  */
 export type RuleKind = 'state-floor' | 'state-cap' | 'local' | 'assumption';
 
-export type RuleTopic = 'eligibility' | 'height' | 'size' | 'setback' | 'coverage' | 'approval-path';
+export type RuleTopic = 'eligibility' | 'height' | 'size' | 'setback' | 'coverage' | 'parking' | 'approval-path';
 
 export interface CheckResult {
   readonly ruleId: string;

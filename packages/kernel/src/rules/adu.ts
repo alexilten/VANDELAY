@@ -32,6 +32,8 @@ export interface AduProposal {
   readonly clearances?: { readonly front?: number; readonly side?: number; readonly rear?: number };
   /** For conversions: floor area added beyond the existing structure's dimensions. */
   readonly expansionArea?: number;
+  /** Off-street parking spaces the design provides for the ADU. */
+  readonly parkingSpaces?: number;
 }
 
 export interface LotFacts {
@@ -55,6 +57,18 @@ export interface LotFacts {
   readonly nearTransit?: boolean;
   /** The ADU roof pitch matches the primary dwelling's. */
   readonly roofPitchMatchesPrimary?: boolean;
+  /**
+   * Parking exemptions (Gov. Code § 66322(a)). Leave undefined when unknown.
+   * `nearPublicTransit` is broader than `nearTransit`: any fixed-route, fixed-fare
+   * stop (bus stop, train station) within one-half mile walking distance (§ 66313(m)).
+   */
+  readonly nearPublicTransit?: boolean;
+  readonly historicDistrict?: boolean;
+  /** On-street parking permits are required but not offered to the ADU occupant. */
+  readonly onStreetPermitsWithheld?: boolean;
+  readonly carShareWithinOneBlock?: boolean;
+  /** The ADU permit is filed together with a new primary dwelling on the same lot. */
+  readonly filedWithNewPrimary?: boolean;
 }
 
 /**

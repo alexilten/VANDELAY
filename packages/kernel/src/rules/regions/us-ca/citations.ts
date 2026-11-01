@@ -125,6 +125,24 @@ export const GOV_66333: Citation = {
   readAt: "https://california.public.law/codes/ca_gov't_code_section_66333",
 };
 
+export const GOV_66314_D10: Citation = {
+  ...base,
+  id: 'us-ca.gov.66314.d10',
+  section: '§ 66314(d)(10)–(11)',
+  title: 'Parking: no more than one space per ADU or per bedroom, whichever is less; tandem allowed; removed garage parking need not be replaced',
+  url: leginfo('66314'),
+  readAt: 'https://california.public.law/codes/government_code_section_66314',
+};
+
+export const GOV_66322_A: Citation = {
+  ...base,
+  id: 'us-ca.gov.66322.a',
+  section: '§ 66322(a)',
+  title: 'No parking may be required near public transit, in a historic district, for space within the house or an accessory structure, where permits are withheld, near car share, or when filed with a new home',
+  url: leginfo('66322'),
+  readAt: 'https://california.public.law/codes/government_code_section_66322',
+};
+
 export const LA_COUNTY_SB543_MEMO: Citation = {
   id: 'us-ca.la-county.sb543-memo',
   jurisdiction: 'County of Los Angeles',
@@ -143,11 +161,13 @@ export const US_CA_CITATIONS: readonly Citation[] = [
   GOV_66314_D4,
   GOV_66314_D5,
   GOV_66314_D7,
+  GOV_66314_D10,
   GOV_66321_B2,
   GOV_66321_B3,
   GOV_66321_B4,
   GOV_66323_A1,
   GOV_66323_A2,
+  GOV_66322_A,
   GOV_66333,
   LA_COUNTY_SB543_MEMO,
 ];

@@ -13,6 +13,7 @@ const cottage = (over: { adu?: Partial<AduInput['adu']>; lot?: Partial<AduInput[
     bedrooms: 1,
     height: ft(15),
     clearances: { side: ft(5), rear: ft(5), front: ft(60) },
+    parkingSpaces: 1,
     ...over.adu,
   },
   lot: { zoning: 'single-family', primary: 'single-family', primaryExists: true, primaryFloorArea: sqft(1600), lotArea: sqft(6000), existingFootprint: sqft(1600), ...over.lot },
@@ -214,4 +215,23 @@ describe('region plug-in', () => {
 
 describe('formatting', () => {
   it('groups thousands without locale', () => expect(fmtSqft(sqft(1200))).toBe('1,200 sq ft'));
+});
+
+describe('parking (§ 66314(d)(10), § 66322(a))', () => {
+  const id = 'us-ca.adu.parking';
+  it('requires nothing near public transit or for a conversion', () => {
+    expect(check(id, cottage({ lot: { nearPublicTransit: true } })).status).toBe('pass');
+    expect(check(id, cottage({ adu: { kind: 'conversion' } })).limit).toBe(0);
+  });
+  it('caps the requirement at one space, and reviews when none is provided', () => {
+    const r = check(id, cottage({ adu: { bedrooms: 2, parkingSpaces: 0 } }));
+    expect(r.status).toBe('review');
+    expect(r.limit).toBe(1);
+    expect(check(id, cottage({ adu: { bedrooms: 2, parkingSpaces: 1 } })).status).toBe('pass');
+  });
+  it('flags the studio reading as an interpretation', () => {
+    const r = check(id, cottage({ adu: { bedrooms: 0 } }));
+    expect(r.status).toBe('pass');
+    expect(r.interpretations.length).toBe(1);
+  });
 });

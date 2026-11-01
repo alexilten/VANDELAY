@@ -33,9 +33,11 @@ import {
   GOV_66314_D4,
   GOV_66314_D5,
   GOV_66314_D7,
+  GOV_66314_D10,
   GOV_66321_B2,
   GOV_66321_B3,
   GOV_66321_B4,
+  GOV_66322_A,
   GOV_66323_A1,
   GOV_66323_A2,
   GOV_66333,
@@ -420,6 +422,47 @@ export const lotCoverage: CaRule = {
   },
 };
 
+export const parking: CaRule = {
+  id: 'us-ca.adu.parking',
+  region: REGION,
+  topic: 'parking',
+  kind: 'state-cap',
+  title: 'Parking',
+  summary: 'A city may require at most one parking space per ADU or per bedroom, whichever is less, and none at all in the cases listed in § 66322(a).',
+  citations: [GOV_66314_D10, GOV_66322_A],
+  check: (i) => {
+    const cites = parking.citations;
+    if (i.adu.kind === 'jadu') return na(parking.id, 'Junior ADUs are covered by separate rules (§ 66333 et seq.). Not checked yet.', cites);
+    const l = i.lot;
+    const exemptions: string[] = [];
+    if (l.nearPublicTransit) exemptions.push('within ½ mile walking distance of public transit ((a)(1))');
+    if (l.historicDistrict) exemptions.push('in a historic district ((a)(2))');
+    if (i.adu.kind === 'conversion') exemptions.push('inside the house or an accessory structure ((a)(3))');
+    if (l.onStreetPermitsWithheld) exemptions.push('on-street permits are required but not offered ((a)(4))');
+    if (l.carShareWithinOneBlock) exemptions.push('car share within one block ((a)(5))');
+    if (l.filedWithNewPrimary) exemptions.push('filed together with a new home on the lot ((a)(6))');
+    if (exemptions.length) {
+      return result(parking.id, 'pass', 'No parking can be required for this ADU.', `${cite(GOV_66322_A)} bars parking requirements when the ADU is ${listJoin(exemptions)}.`, cites, { limit: 0, unit: 'count' });
+    }
+    const max = Math.min(1, i.adu.bedrooms);
+    const interp = i.adu.bedrooms === 0 ? ['We read “one space per bedroom, whichever is less” as zero spaces for a studio. Unverified.'] : [];
+    const unknown = [l.nearPublicTransit, l.historicDistrict, l.carShareWithinOneBlock].some((v) => v === undefined);
+    const why = `${cite(GOV_66314_D10)} caps ADU parking at one space per unit or per bedroom, whichever is less. Tandem parking on a driveway counts, and garage parking removed to build the ADU need not be replaced. ${cite(GOV_66322_A)} removes the requirement entirely near public transit, in a historic district, or near car share.`;
+    const provided = i.adu.parkingSpaces ?? 0;
+    if (provided >= max) {
+      return result(parking.id, 'pass', max === 0 ? 'No parking can be required for this ADU.' : `${provided} parking space${provided === 1 ? '' : 's'} provided, which meets the most a city can require.`, why, cites, { measured: provided, limit: max, unit: 'count', interpretations: interp });
+    }
+    return result(
+      parking.id,
+      'review',
+      `The city may require ${max} parking space${unknown ? ', unless the lot is near public transit or car share' : ''}. The design provides ${provided}.`,
+      why,
+      cites,
+      { measured: provided, limit: max, unit: 'count', interpretations: interp },
+    );
+  },
+};
+
 export const byRightDetached: CaRule = {
   id: 'us-ca.adu.path.ministerial-detached',
   region: REGION,
@@ -503,6 +546,7 @@ export const US_CA_ADU_RULES: readonly CaRule[] = [
   rearSetback,
   frontSetback,
   lotCoverage,
+  parking,
   byRightDetached,
   byRightConversion,
 ];
