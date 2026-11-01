@@ -17,7 +17,9 @@ The AI design-and-build platform for the built world. Intent is the source of tr
 
 - **Millimetres** internally (`Mm` in the kernel). Convert to metres only at the three.js boundary (`apps/web/src/units.ts`).
 - **Z up** everywhere. The web app sets `Object3D.DEFAULT_UP` to `(0, 0, 1)` at startup.
-- **Versioned intent JSON**: every intent carries `schema`, `version`, `units` and `up` (see `packages/kernel/src/intent.ts`).
+- **Versioned intent JSON**: every intent carries `schema`, `version`, `units` and `up` (see `packages/kernel/src/intent.ts`). The Home body (site, brief, design, sources) is in `packages/kernel/src/home-intent.ts`; agents change intent only through validated JSON Patches (`patch.ts`).
+- **Site frame**: +X east, +Y north, +Z up; Z is elevation above the site datum.
+- **Example data is labelled**: example sites live in `packages/kernel/src/examples.ts` and are tagged `by: 'example'` in the intent's `sources`.
 - The kernel has no runtime dependencies and no clocks or randomness; a test enforces this.
 
 ## Develop
