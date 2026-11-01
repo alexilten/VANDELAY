@@ -7,9 +7,11 @@
  * In Claude Code: `claude mcp add vandelay -- node /path/to/apps/mcp/src/stdio.ts`
  */
 import { createInterface } from 'node:readline';
-import { createMcpServer } from '@vandelay/agent';
+import { createVandelayServer } from './server.ts';
+import { signerFromEnv } from './signing.ts';
 
-const server = createMcpServer();
+const signer = signerFromEnv();
+const server = createVandelayServer(signer);
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
 
 lines.on('line', (line) => {
@@ -18,4 +20,4 @@ lines.on('line', (line) => {
   if (res) process.stdout.write(`${JSON.stringify(res)}\n`);
 });
 
-process.stderr.write(`vandelay mcp ${server.info.version} on stdio, ${server.tools.length} tools\n`);
+process.stderr.write(`vandelay mcp ${server.info.version} on stdio, ${server.tools.length} tools, receipts signed by ${signer.publicKey.keyId}\n`);

@@ -1,14 +1,16 @@
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createMcpServer } from '@vandelay/agent';
 import { createHttpHandler } from './http.ts';
+import { createVandelayServer } from './server.ts';
+import { createSigner } from './signing.ts';
 
 let server: Server;
 let base: string;
 
 beforeAll(async () => {
-  server = createServer(createHttpHandler(createMcpServer(), { allowedOrigins: ['https://vandelay.example'] }));
+  const signer = createSigner();
+  server = createServer(createHttpHandler(createVandelayServer(signer), { allowedOrigins: ['https://vandelay.example'], publicKey: signer.publicKey }));
   await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
@@ -43,5 +45,7 @@ describe('MCP over HTTP', () => {
     expect((await bad.json()).error.code).toBe(-32700);
     expect((await fetch(`${base}/mcp`)).status).toBe(405);
     expect((await (await fetch(`${base}/health`)).json()).ok).toBe(true);
+    const keys = await (await fetch(`${base}/.well-known/vandelay-keys.json`)).json();
+    expect(keys.keys[0].keyId).toMatch(/^ephemeral:[0-9a-f]{16}$/);
   });
 });

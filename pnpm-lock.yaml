@@ -23,6 +23,9 @@ importers:
       '@vandelay/agent':
         specifier: workspace:*
         version: link:../../packages/agent
+      '@vandelay/engine-home':
+        specifier: workspace:*
+        version: link:../../packages/engines/home
 
   apps/web:
     dependencies:
