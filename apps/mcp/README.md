@@ -44,6 +44,15 @@ To set the key, pass `VANDELAY_SIGNING_KEY` (a PKCS#8 PEM, Ed25519). You can gen
 
 The text a model reads is compact: geometry and piers are left out and each traced number becomes `{ value, unit }`. `structuredContent` carries the full result, and `explain` returns any trace.
 
+## Deploy (Render, free tier)
+
+`render.yaml` at the repo root is a Render Blueprint for the HTTP server.
+
+1. Create a key: `openssl genpkey -algorithm ed25519 -out vandelay-signing.pem`. Keep the file out of git.
+2. In Render, choose **New > Blueprint**, pick this repo, and paste the PEM into `VANDELAY_SIGNING_KEY` when asked.
+3. Check that `https://<service>.onrender.com/health` and `/.well-known/vandelay-keys.json` respond.
+4. The free tier sleeps after about 15 idle minutes. Set the repository variable `MCP_HEALTH_URL` to the health URL, and `.github/workflows/keep-warm.yml` will ping it every 10 minutes. One always-on free service roughly uses up Render's monthly free hours. Move to a paid plan once agents pay, and delete the workflow then.
+
 ## Approval links
 
 Set `VIEWER_URL` and every signed result also carries an `approvalUrl`: `<VIEWER_URL>#v=0&receipt=<base64url>&input=<base64url>`. An agent can hand that link to its person. The viewer re-runs the same deterministic tool on the input, checks the result against `resultHash`, then checks the signature. That way the link stays small (1 to 2 KB), and the person sees exactly what the agent got. `receipt_verify` ignores `receipt` and `approvalUrl` when it hashes a result.
