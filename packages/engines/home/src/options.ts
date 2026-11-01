@@ -77,6 +77,9 @@ export const proposeOptions = (intent: HomeIntent, opts: SearchOptions = {}): Ho
 
   const all: Scored[] = [];
   let order = 0;
+  // The least-bad infeasible candidate, to explain an empty search.
+  let nearMiss: HomeResult | undefined;
+  const fails = (r: HomeResult) => r.checks.filter((c) => c.status === 'fail').length;
   for (const parti of opts.partis ?? PARTIS) {
     const layout = layoutParti(parti, ctx.program, ctx.catalog);
     if (!layout) continue;
@@ -87,7 +90,11 @@ export const proposeOptions = (intent: HomeIntent, opts: SearchOptions = {}): Ho
         for (const foundation of foundations) {
           const choice: Choice = { parti, anchor, rotation, foundation };
           const res = evaluateChoice(ctx, choice, layout);
-          if (!res.ok || !res.feasible) continue;
+          if (!res.ok) continue;
+          if (!res.feasible) {
+            if (!nearMiss || fails(res) < fails(nearMiss)) nearMiss = res;
+            continue;
+          }
           // Stepped pods that all land at one level are the same home as the single-level version: skip the duplicate.
           if (foundation === 'steppedPods' && new Set(res.resolved.floorDatums).size < 2) continue;
           all.push({ choice, result: res, order: order++ });
@@ -116,12 +123,24 @@ export const proposeOptions = (intent: HomeIntent, opts: SearchOptions = {}): Ho
   }
   picked.sort(rank);
 
+  if (!picked.length) {
+    const why = nearMiss?.checks.filter((c) => c.status === 'fail').map((c) => `${c.ruleId}: ${c.message}`) ?? ['no layout fits inside the setbacks'];
+    return { ok: false, issues: why.map((message) => ({ path: '/body', message: `no feasible option. Closest try fails ${message}` })) };
+  }
+
+  const seen = new Map<string, number>();
   return picked.map(({ choice }) => {
     // Re-evaluate from the resolved intent (rounded anchor and rotation), so the option reproduces exactly from its own intent.
     const resolved = resolveIntent(intent, choice);
     const result = evaluateWithDefaults(resolved) as HomeResult;
     const stepped = choice.foundation === 'steppedPods' && choice.parti !== 'steppedBar';
-    return { label: `${LABEL[choice.parti]}${stepped ? ', stepped' : ''}`, intent: resolved, result };
+    const base = `${LABEL[choice.parti]}${stepped ? ', stepped' : ''}`;
+    // A second option of the same kind is named by how far it is turned from the first.
+    const first = seen.get(base);
+    if (first === undefined) seen.set(base, choice.rotation);
+    const turn = first === undefined ? 0 : Math.round(Math.abs((((choice.rotation - first) % 360) + 540) % 360 - 180));
+    const label = turn ? `${base}, turned ${turn}°` : first === undefined ? base : `${base}, moved`;
+    return { label, intent: resolved, result };
   });
 };
 
@@ -156,8 +175,7 @@ export const evaluate = (intent: HomeIntent): HomeResult | HomeError => {
   const needsSearch = d.placement.anchor === 'auto' || d.placement.rotation === 'auto' || d.foundation === 'auto';
   if (needsSearch) {
     const found = proposeOptions(intent, { count: 1, partis: [d.parti] });
-    if (!Array.isArray(found)) return found;
-    if (found[0]) return found[0].result;
+    if (Array.isArray(found) && found[0]) return found[0].result;
   }
   return evaluateWithDefaults(intent);
 };

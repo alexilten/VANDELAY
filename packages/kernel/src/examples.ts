@@ -5,7 +5,7 @@
  * Every site field is tagged `by: 'example'` in `sources`, so the UI and any
  * report can say so.
  */
-import { createHomeIntent, type Brief, type HomeIntent, type SiteIntent, type Source } from './home-intent.ts';
+import { createHomeIntent, type Brief, type HomeIntent, type Jurisdiction, type SiteIntent, type Source } from './home-intent.ts';
 
 const EXAMPLE: Source = { by: 'example', note: 'example value, not real data' };
 
@@ -91,3 +91,30 @@ export const exampleHomeIntent = (site: ExampleSiteId = 'slopeAlong', brief: Bri
       '/body/design/catalog': { by: 'default', note: 'generic example catalog until a vendor catalog is signed' },
     },
   });
+
+/** Example California lot facts: a single-family lot with an existing home. Transit proximity left unknown. */
+export const EXAMPLE_CA_LOT: Jurisdiction = {
+  region: 'us-ca',
+  lot: { zoning: 'single-family', primary: 'single-family', primaryExists: true },
+};
+
+export const EXAMPLE_ADU_BRIEF: Brief = {
+  prompt: 'A one-bedroom backyard ADU on my hillside, step-free',
+  bedrooms: 1,
+  bathrooms: 1,
+  area: {},
+  maxStories: 1,
+  stepFreeEntry: true,
+  priorities: { view: 1, lessGrading: 0.6 },
+  use: 'adu',
+};
+
+/** An example ADU intent on an example site in California (state rules only; the zoning values are examples). */
+export const exampleAduIntent = (site: ExampleSiteId = 'slopeAlong', seed = 1): HomeIntent => {
+  const base = exampleHomeIntent(site, EXAMPLE_ADU_BRIEF, seed);
+  return createHomeIntent({
+    ...base.body,
+    id: `example-adu-${site}`,
+    site: { ...base.body.site, jurisdiction: EXAMPLE_CA_LOT },
+  });
+};

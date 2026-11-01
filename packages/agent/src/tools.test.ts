@@ -18,6 +18,12 @@ describe('brief from a prompt', () => {
     expect(fromPrompt).toEqual([]);
   });
 
+  it('recognises an ADU', () => {
+    expect(briefFromPrompt('a backyard cottage for my mom').brief.use).toBe('adu');
+    expect(briefFromPrompt('an ADU behind the house').brief.use).toBe('adu');
+    expect(briefFromPrompt('a family home').brief.use).toBeUndefined();
+  });
+
   it('reads words and studios', () => {
     expect(briefFromPrompt('two bedroom cabin').brief.bedrooms).toBe(2);
     expect(briefFromPrompt('a studio by the creek').brief.bedrooms).toBe(0);

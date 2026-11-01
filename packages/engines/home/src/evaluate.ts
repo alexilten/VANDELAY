@@ -10,6 +10,7 @@ import {
 } from '@vandelay/kernel';
 import { findCatalog, type Catalog } from './catalog.ts';
 import { layoutParti, sizeProgram, type LocalLayout, type LocalModule } from './layout.ts';
+import { deriveFacts, jurisdictionChecks } from './jurisdiction.ts';
 import { RULES } from './rules.ts';
 import type {
   CheckResult, HomeError, HomeResult, PlacedModule, Pier, ScoreId, Solid, Traced,
@@ -353,6 +354,9 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
         ? { ruleId: 'vandelay.assumption.step-free-bridge', status: 'pass', measured: quantities.bridgeLength!, limit: bridgeMax, message: `A ${(bridge.length / 1000).toFixed(1)} m level bridge reaches the ground from the entry floor.` }
         : { ruleId: 'vandelay.assumption.step-free-bridge', status: 'warn', limit: bridgeMax, message: 'No short level bridge reaches the ground; step-free entry would need a ramp or a lift.' },
   );
+  const facts = deriveFacts(intent, c, modules, quantities.height!, ctx.lotArea);
+  const juris = jurisdictionChecks(intent, facts, ctx.lotArea, solids, ground);
+  checks.push(...juris.checks);
   checks.push({ ruleId: 'vandelay.review.structure', status: 'review', message: RULES['vandelay.review.structure'].statement });
   checks.push({ ruleId: 'vandelay.review.delivery', status: 'review', message: RULES['vandelay.review.delivery'].statement });
 
@@ -407,6 +411,7 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     quantities,
     checks,
     scores,
+    ...(juris.report ? { rules: juris.report } : {}),
     feasible: !checks.some((ch) => ch.status === 'fail'),
   };
 };
