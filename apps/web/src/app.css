@@ -1,0 +1,125 @@
+/* Page layout: front door, then a one-screen workspace. */
+.v-page {
+  position: relative; z-index: 1;
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column;
+  max-width: var(--v-page-max); margin: 0 auto;
+  padding-block: 18px 20px;
+  padding-left: max(var(--v-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--v-gutter), env(safe-area-inset-right, 0px));
+}
+.v-page--work { max-width: 1280px; }
+.v-top { display: flex; align-items: center; justify-content: space-between; height: 44px; flex: none; }
+.v-top__end { display: flex; align-items: center; gap: var(--v-space-2); }
+.v-signin { font-size: 14px; border-radius: var(--v-radius-pill); padding: 6px 14px; }
+.v-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-block: var(--v-space-9); min-height: 0; }
+.v-page--work .v-main { justify-content: flex-start; padding-block: var(--v-space-3) var(--v-space-2); }
+.v-foot { text-align: center; font-size: var(--v-text-fine); color: var(--v-color-ink-3); letter-spacing: 0; flex: none; }
+.v-fine { display: block; font-size: var(--v-text-fine); color: var(--v-color-ink-2); letter-spacing: 0; margin: 0; }
+
+/* Front door */
+.v-door { display: flex; flex-direction: column; align-items: center; gap: var(--v-space-8); text-align: center; animation: v-in 360ms var(--v-ease-spring) both; }
+.v-door h1 { margin: 0; font-size: var(--v-text-display); line-height: 1.04; font-weight: 700; letter-spacing: var(--v-tracking-tight); text-wrap: balance; max-width: 12ch; }
+.v-door__tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--v-space-4); width: min(760px, 100%); }
+
+/* Workspace: fills the viewport on desktop, so nothing scrolls the page. */
+.v-work { display: flex; flex-direction: column; gap: var(--v-space-4); min-height: 0; flex: 1; animation: v-in 360ms var(--v-ease-spring) both; }
+.v-work__bar { display: flex; align-items: center; gap: var(--v-space-4); flex-wrap: wrap; }
+.v-work__prompt { flex: 1; min-width: 240px; width: auto; }
+.v-cats { display: flex; gap: var(--v-space-1); padding: 4px; border-radius: var(--v-radius-pill); background: var(--v-glass); border: 1px solid var(--v-color-hairline); backdrop-filter: var(--v-glass-blur-soft); -webkit-backdrop-filter: var(--v-glass-blur-soft); }
+.v-cats__item { display: flex; align-items: center; gap: var(--v-space-2); border: 0; background: none; cursor: pointer; border-radius: var(--v-radius-pill); padding: 4px 12px 4px 4px; font-size: 14px; font-weight: 500; color: var(--v-color-ink-2); transition: background var(--v-dur-fast) ease, color var(--v-dur-fast) ease; }
+.v-cats__item[aria-checked="true"] { background: var(--v-glass-strong); color: var(--v-color-ink); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+.v-cats__item:not([aria-checked="true"]) .v-app-icon { filter: saturate(0.5); opacity: 0.8; }
+
+.v-work__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: var(--v-space-4); align-items: start; }
+.v-work__side { display: flex; flex-direction: column; gap: var(--v-space-4); min-height: 0; }
+.v-work__side > .v-widget { flex: none; }
+.v-work__options { min-height: 0; }
+
+.v-site { display: flex; flex-direction: column; gap: var(--v-space-3); }
+.v-site .v-prompt { width: 100%; }
+.v-site__body { display: grid; grid-template-columns: 1fr; gap: var(--v-space-3); }
+.v-sitemap { width: 100%; height: 104px; display: block; border-radius: var(--v-radius-md); background: var(--v-glass-strong); }
+.v-facts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--v-space-3) var(--v-space-4); margin: 0; }
+.v-facts div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.v-facts dt { color: var(--v-color-ink-2); font-size: 12px; letter-spacing: 0; }
+.v-facts dd { margin: 0; font-weight: 500; font-size: 14px; }
+
+.v-questions { display: flex; flex-direction: column; gap: var(--v-space-3); }
+.v-q { display: flex; flex-direction: column; gap: 6px; }
+.v-q > span { font-size: 12px; color: var(--v-color-ink-2); letter-spacing: 0; }
+.v-q .v-seg { gap: 6px; }
+.v-q .v-seg button { font-size: 13px; padding: 6px 11px; }
+
+.v-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--v-space-4); padding: 3px; margin: -3px; }
+.v-opt {
+  text-align: left; cursor: pointer; border-radius: 22px; padding: var(--v-space-5);
+  display: flex; flex-direction: column; gap: var(--v-space-3);
+  background: var(--v-glass-strong); border: 1px solid var(--v-color-hairline);
+  transition: transform var(--v-dur) var(--v-ease-spring), box-shadow var(--v-dur) ease;
+}
+.v-opt:hover { transform: translateY(-2px); }
+.v-opt[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--v-color-accent); border-color: transparent; }
+.v-opt__art { width: 100%; height: 96px; display: block; border-radius: 14px; background: color-mix(in srgb, var(--v-color-ink) 4%, transparent); }
+.v-opt h3 { margin: 0; font-size: 19px; line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; }
+.v-opt__big { font-size: 34px; font-weight: 700; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+.v-opt__big small { display: block; font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--v-color-ink-2); margin-top: 6px; }
+.v-opt dl { display: grid; gap: 6px; margin: 0; font-size: 14px; }
+.v-opt dl div { display: flex; justify-content: space-between; gap: var(--v-space-3); }
+.v-opt dt { color: var(--v-color-ink-2); }
+.v-opt dd { margin: 0; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.v-work__cta { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--v-space-4); border-radius: var(--v-radius-pill); padding: 8px 8px 8px 12px; }
+.v-work__cta-text { display: flex; align-items: center; gap: var(--v-space-3); min-width: 0; }
+.v-work__cta-text b { display: block; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v-work__cta-text > span { min-width: 0; }
+
+@keyframes v-in { from { opacity: 0; transform: translateY(8px) scale(0.99); } }
+
+/* Tablet: options stack into the main column. */
+@media (max-width: 1040px) {
+  .v-options { grid-template-columns: repeat(3, minmax(220px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px; margin: -4px; }
+  .v-opt { scroll-snap-align: start; }
+}
+
+/* Vertical mobile: one column, widgets collapse to a line, options swipe sideways. */
+@media (max-width: 760px) {
+  .v-page { padding-block: 12px; }
+  .v-door { gap: var(--v-space-6); }
+  .v-door__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--v-space-3); }
+  .v-signin { display: none; }
+  .v-main { padding-block: var(--v-space-6); }
+  .v-page--work .v-main { padding-block: var(--v-space-3); }
+  .v-work { gap: var(--v-space-3); }
+  .v-work__bar { flex-direction: column; align-items: stretch; gap: var(--v-space-3); }
+  .v-work__prompt { min-width: 0; }
+  .v-cats { justify-content: space-between; border-radius: 22px; }
+  .v-cats__item { flex: 1; flex-direction: column; gap: 4px; padding: 6px 4px; border-radius: 16px; font-size: 11px; }
+  .v-work__grid { grid-template-columns: minmax(0, 1fr); gap: var(--v-space-3); }
+  .v-work__cta .v-fine { display: none; }
+  .v-work__cta .v-btn { padding: 10px 18px; font-size: 15px; white-space: nowrap; }
+  .v-opt__art { height: 72px; }
+  .v-work__side { gap: var(--v-space-3); }
+  .v-widget { border-radius: 22px; }
+  .v-widget__body { padding: 0 var(--v-space-4) var(--v-space-4); }
+  .v-options { grid-template-columns: repeat(3, 78%); gap: var(--v-space-3); }
+  .v-opt { padding: var(--v-space-4); }
+  .v-opt__big { font-size: 28px; }
+  .v-work__cta { position: sticky; bottom: max(8px, env(safe-area-inset-bottom, 0px)); border-radius: 22px; }
+  .v-foot { display: none; }
+}
+
+/* Short desktop windows: let widget bodies scroll inside, not the page. */
+@media (min-width: 761px) {
+  .v-page--work { height: 100vh; height: 100dvh; }
+  .v-page--work .v-main { min-height: 0; }
+  .v-work__grid { height: 100%; }
+  .v-work__side { max-height: 100%; overflow: auto; padding: 2px; margin: -2px; }
+  .v-work__options { max-height: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .v-door, .v-work { animation: none; }
+  .v-opt { transition: none; }
+  .v-opt:hover { transform: none; }
+}

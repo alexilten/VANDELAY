@@ -1,0 +1,60 @@
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { App } from './App';
+import { EXAMPLES } from './data/examples';
+
+afterEach(cleanup);
+
+describe('front door', () => {
+  it('asks the one question and offers four categories', () => {
+    render(<App />);
+    expect(screen.getByRole('heading', { name: 'What would you like to build?' })).toBeTruthy();
+    for (const name of ['Home', 'Business', 'Mixed-use', 'Venue']) {
+      expect(screen.getByRole('button', { name })).toBeTruthy();
+    }
+  });
+
+  it('routes a typed brief to the matching category on one screen', () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText('Describe what you want to build'), { target: { value: 'a stadium for soccer' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Start' }));
+    expect(screen.getByRole('radio', { name: 'Venue' }).getAttribute('aria-checked')).toBe('true');
+    // Site, brief and options are all on the same screen.
+    expect(screen.getByRole('button', { name: /Site/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Your brief/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Three ways to build it/ })).toBeTruthy();
+  });
+});
+
+describe('workspace', () => {
+  it('labels every figure as an example', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    expect(screen.getAllByText(/^Example/).length).toBeGreaterThanOrEqual(2);
+    const options = screen.getByRole('radiogroup', { name: 'Options' });
+    for (const o of EXAMPLES.home.options) {
+      const card = within(options).getByRole('radio', { name: new RegExp(o.name) });
+      expect(within(card).getByText(/example/)).toBeTruthy();
+    }
+    expect(screen.getByText(/every figure shown is an example/)).toBeTruthy();
+  });
+
+  it('collapses and expands a widget', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Business' }));
+    const toggle = screen.getByRole('button', { name: /Your brief/ });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('selects an option and switches category in place', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    const opt = screen.getByRole('radio', { name: /One module and a deck/ });
+    fireEvent.click(opt);
+    expect(opt.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(screen.getByRole('radio', { name: 'Mixed-use' }));
+    expect(screen.getByRole('radio', { name: /6 floors over shops/ })).toBeTruthy();
+  });
+});
