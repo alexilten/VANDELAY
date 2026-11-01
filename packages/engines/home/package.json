@@ -1,0 +1,10 @@
+{
+  "name": "@vandelay/engine-home",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Home typology engine: turns a home intent into geometry and checks. Stub until the v0 plan is agreed.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p tsconfig.json" },
+  "dependencies": { "@vandelay/kernel": "workspace:*" }
+}
