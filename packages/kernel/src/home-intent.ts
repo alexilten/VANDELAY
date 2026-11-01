@@ -13,6 +13,7 @@
  */
 import { CATEGORIES, createIntent, INTENT_SCHEMA, INTENT_SCHEMA_VERSION, type IntentEnvelope, type ParseResult } from './intent.ts';
 import { hasPointer, joinPointer, type JsonPointer } from './pointer.ts';
+import type { LotFacts } from './rules/adu.ts';
 
 /** Plain numbers in intent JSON, documented by unit. */
 export type MmValue = number;
@@ -53,7 +54,18 @@ export interface SiteIntent {
   readonly view?: { readonly bearing: Deg };
   /** For sun studies only; never moves geometry. */
   readonly geo?: { readonly lat: number; readonly lon: number };
+  /** Where the lot is and the facts its rules need. Without it, only intent zoning values are checked. */
+  readonly jurisdiction?: Jurisdiction;
 }
+
+/** A rules region id (e.g. "us-ca") and the lot facts its rules read (see kernel/rules/adu.ts). */
+export interface Jurisdiction {
+  readonly region: string;
+  readonly lot?: LotFacts;
+}
+
+export const USES = ['home', 'adu'] as const;
+export type Use = (typeof USES)[number];
 
 export const PRIORITIES = ['view', 'sun', 'privacy', 'cost', 'lessGrading'] as const;
 export type Priority = (typeof PRIORITIES)[number];
@@ -70,6 +82,8 @@ export interface Brief {
   readonly parking?: 0 | 1 | 2;
   /** Weights 0..1. Missing = 0. */
   readonly priorities: Partial<Record<Priority, number>>;
+  /** A main home, or an accessory dwelling unit beside one. Default 'home'. */
+  readonly use?: Use;
 }
 
 export const PARTIS = ['bar', 'L', 'courtyard', 'steppedBar'] as const;
@@ -181,7 +195,7 @@ const isStrictlyConvexCCW = (pts: readonly Point2[]): boolean => {
 
 const checkSite = (c: Checker, s: unknown, p: JsonPointer): void => {
   if (!c.obj(s, p)) return;
-  c.keys(s, ['datum', 'boundary', 'frontEdge', 'terrain', 'zoning', 'access', 'view', 'geo'], p);
+  c.keys(s, ['datum', 'boundary', 'frontEdge', 'terrain', 'zoning', 'access', 'view', 'geo', 'jurisdiction'], p);
   c.str(s.datum, `${p}/datum`);
 
   const bp = `${p}/boundary`;
@@ -251,11 +265,30 @@ const checkSite = (c: Checker, s: unknown, p: JsonPointer): void => {
     c.num(s.geo.lat, `${p}/geo/lat`, { min: -90, max: 90 });
     c.num(s.geo.lon, `${p}/geo/lon`, { min: -180, max: 180 });
   }
+  const jp = `${p}/jurisdiction`;
+  if (s.jurisdiction !== undefined && c.obj(s.jurisdiction, jp)) {
+    const j = s.jurisdiction;
+    c.keys(j, ['region', 'lot'], jp);
+    if (c.str(j.region, `${jp}/region`) && !/^[a-z]{2}(-[a-z0-9]+)*(\.[a-z0-9-]+)*$/.test(j.region)) c.fail(`${jp}/region`, 'must be a region id such as "us-ca"');
+    const lp = `${jp}/lot`;
+    if (j.lot !== undefined && c.obj(j.lot, lp)) {
+      const l = j.lot;
+      c.keys(l, ['zoning', 'primary', 'primaryExists', 'primaryMultistory', 'primaryFloorArea', 'lotArea', 'existingFootprint', 'nearTransit', 'roofPitchMatchesPrimary'], lp);
+      c.oneOf(l.zoning, ['single-family', 'multifamily', 'mixed-use', 'other'] as const, `${lp}/zoning`);
+      c.oneOf(l.primary, ['single-family', 'multifamily', 'none'] as const, `${lp}/primary`);
+      if (typeof l.primaryExists !== 'boolean') c.fail(`${lp}/primaryExists`, 'must be true or false');
+      for (const k of ['primaryMultistory', 'nearTransit', 'roofPitchMatchesPrimary']) {
+        if (l[k] !== undefined && typeof l[k] !== 'boolean') c.fail(`${lp}/${k}`, 'must be true or false');
+      }
+      for (const k of ['primaryFloorArea', 'lotArea', 'existingFootprint']) if (l[k] !== undefined) c.num(l[k], `${lp}/${k}`, { min: 0 });
+    }
+  }
 };
 
 const checkBrief = (c: Checker, b: unknown, p: JsonPointer): void => {
   if (!c.obj(b, p)) return;
-  c.keys(b, ['prompt', 'bedrooms', 'bathrooms', 'area', 'maxStories', 'stepFreeEntry', 'parking', 'priorities'], p);
+  c.keys(b, ['prompt', 'bedrooms', 'bathrooms', 'area', 'maxStories', 'stepFreeEntry', 'parking', 'priorities', 'use'], p);
+  if (b.use !== undefined) c.oneOf(b.use, USES, `${p}/use`);
   c.str(b.prompt, `${p}/prompt`, false);
   c.num(b.bedrooms, `${p}/bedrooms`, { int: true, min: 0, max: 8 });
   if (c.num(b.bathrooms, `${p}/bathrooms`, { min: 1, max: 8 }) && !Number.isInteger(b.bathrooms * 2)) {

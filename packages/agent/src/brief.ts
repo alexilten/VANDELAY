@@ -52,11 +52,14 @@ export const briefFromPrompt = (prompt: string): BriefGuess => {
   flag(/\b(cheap|afford|budget|low[\s-]?cost|economical)/, 'cost');
   flag(/\b(hill|hillside|slope|sloped|steep|lightly|tread)/, 'lessGrading', 0.6);
 
+  const adu = /\b(adu|accessory dwelling|granny|in-law|backyard (?:cottage|unit|home)|guest house|casita)\b/.test(text);
+  if (adu) found.push('use');
+
   const stepFree = /\b(step[\s-]?free|accessible|wheelchair|no steps|aging in place|single[\s-]?level|one[\s-]?level)\b/.test(text);
   if (stepFree) found.push('stepFreeEntry');
 
   return {
-    brief: { prompt, bedrooms, bathrooms, area, maxStories: 1, stepFreeEntry: stepFree, priorities },
+    brief: { prompt, bedrooms, bathrooms, area, maxStories: 1, stepFreeEntry: stepFree, priorities, ...(adu ? { use: 'adu' as const } : {}) },
     fromPrompt: found,
   };
 };

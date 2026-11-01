@@ -3,7 +3,7 @@
  * and never stored in it. All lengths in mm, site frame (+X east, +Y north,
  * +Z up), angles in degrees.
  */
-import type { HomeIntent, Issue, JsonPointer, Parti, Point2, Terrain } from '@vandelay/kernel';
+import type { Citation, HomeIntent, Issue, JsonPointer, Parti, Point2, RuleReport, Terrain } from '@vandelay/kernel';
 
 /** A number that can answer "why?": how it was computed, from which intent fields, under which rules. */
 export interface Traced<T = number> {
@@ -74,9 +74,16 @@ export type CheckStatus = 'pass' | 'warn' | 'fail' | 'review' | 'n/a';
 export interface CheckResult {
   readonly ruleId: string;
   readonly status: CheckStatus;
+  /** One plain sentence. */
   readonly message: string;
+  /** How the engine measured the value (formula, intent fields read, rules applied). */
   readonly measured?: Traced;
   readonly limit?: number;
+  /** For cited rules: where the limit comes from, naming the code section. */
+  readonly why?: string;
+  readonly citations?: readonly Citation[];
+  /** Readings this result depends on that are Vandelay's interpretation, not settled law. */
+  readonly interpretations?: readonly string[];
 }
 
 export type ScoreId = 'view' | 'sun' | 'privacy' | 'cost' | 'lessGrading' | 'access' | 'overall';
@@ -100,6 +107,8 @@ export interface HomeResult {
   readonly quantities: Readonly<Record<string, Traced>>;
   readonly checks: readonly CheckResult[];
   readonly scores: Readonly<Partial<Record<ScoreId, Traced>>>;
+  /** Summary of the jurisdiction's cited rules, when the intent names a jurisdiction with rules loaded. */
+  readonly rules?: Omit<RuleReport, 'results'>;
   /** True when no check failed. Warnings and review items can still be present. */
   readonly feasible: boolean;
 }
