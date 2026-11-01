@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    projects: ['packages/*', 'packages/engines/*', 'apps/*'],
+    // Listed explicitly: 'packages/engines' is a folder of engines, not a project.
+    projects: ['packages/kernel', 'packages/agent', 'packages/engines/*', 'apps/*'],
   },
 });
