@@ -11,7 +11,7 @@ import { createVandelayServer } from './server.ts';
 import { signerFromEnv } from './signing.ts';
 
 const signer = signerFromEnv();
-const server = createVandelayServer(signer);
+const server = createVandelayServer(signer, process.env.VIEWER_URL ? { viewerUrl: process.env.VIEWER_URL } : {});
 const lines = createInterface({ input: process.stdin, crlfDelay: Infinity });
 
 lines.on('line', (line) => {
