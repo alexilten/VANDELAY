@@ -5,6 +5,8 @@
 
 > **Agent-first (decided 2026-11-01).** Agents are the main customer; the human app is the approval viewer. See [AGENTS.md](./AGENTS.md). The stages below are updated to match; new gates are marked **proposed**.
 
+> **Pace (2026-11-01):** windows are now weeks, not years (see [ROADMAP.md](./ROADMAP.md)). Funding stages, runway and gates that depend on partners, permits or cities keep their own pace.
+
 See [VISION.md](./VISION.md) for the why and [ROADMAP.md](./ROADMAP.md) for the product phases. This plan ties those phases to the funding stages, says what has to be true at each one, and says how we'll know.
 
 ---
@@ -69,7 +71,7 @@ The agent never writes geometry or numbers. If a check fails, the option is not 
 
 Each stage has a **gate**. We move on when the gate is met, not when the calendar says so. Product phases are from [ROADMAP.md](./ROADMAP.md). Funding stages line up with them but are a choice, not a requirement (see the open decision on funding path).
 
-### Stage 0 · Prove the magic (now → month 6) · Roadmap Phase 0 · Raise: pre-seed, optional
+### Stage 0 · Prove the magic (weeks 0–2) · Roadmap Phase 0 · Raise: pre-seed, optional
 
 **Goal (proposed, agent-first):** an outside agent, with no human help, gets three verified home options with signed receipts in under five minutes, and a person can open and approve one in the viewer. *(Was: a stranger types a sentence and gets three options in under five minutes.)*
 
@@ -98,7 +100,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** non-designers can't finish the flow even after three design iterations.
 
-### Stage 1 · Prove it's real and people pay (months 6–18) · Roadmap Phase 1 · Raise: seed
+### Stage 1 · Prove it's real and people pay (weeks 2–8) · Roadmap Phase 1 · Raise: seed
 
 **Goal:** real homeowners on real parcels in one region buy build packages, and the packages get permitted.
 
@@ -126,7 +128,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** packages don't get permitted, or homeowners won't pay at any price we test. Fallback: sell the compiler to vendors or studios first (the open "first paying customer" decision).
 
-### Stage 2 · Prove it compounds (years 1.5–3) · Roadmap Phase 2 · Raise: Series A
+### Stage 2 · Prove it compounds (weeks 8–16) · Roadmap Phase 2 · Raise: Series A
 
 **Goal:** a repeatable engine for adding regions, vendors and building types, and a marketplace that starts to run itself.
 
@@ -151,7 +153,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** each new region costs as much as the first, which would mean we're a services business.
 
-### Stage 3 · Delivery brain (years 3–5) · Roadmap Phase 3 · Raise: Series B
+### Stage 3 · Delivery brain (weeks 16–26) · Roadmap Phase 3 · Raise: Series B
 
 **Goal:** the design carries through to fabrication and site, so changes flow both ways.
 
@@ -159,7 +161,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Lead metrics:** units built through Vandelay, vendor GMV, share of packages that reach fabrication, change orders per project (lower is better), and API customers (lenders, developers).
 
-### Stage 4 · Compiler (years 5–10) · Roadmap Phase 4 · Growth
+### Stage 4 · Compiler (week 26 on) · Roadmap Phase 4 · Growth
 
 **Goal:** intent to permit to factory for any building type, with automated permit checks and an engine SDK for third parties.
 

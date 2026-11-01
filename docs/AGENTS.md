@@ -63,6 +63,22 @@ The first five are in `packages/agent/src/tools.ts`, with JSON Schemas ready for
 
 Calls measure reach; packages are the revenue. At an illustrative 1 sat ≈ $0.001, ten million calls at 500 sats is about $5M a year, which is about what a few thousand packages would bring in. The north star stays **verified build packages delivered per month**, and it now counts packages bought through agents.
 
+## Go to market
+
+We charge for our own work and never take a cut of payments moving between other agents. Doing that would mean holding other people's money.
+
+**Revenue, biggest first:**
+1. **Build package fee** in dollars, paid when a person approves a design in the viewer.
+2. **Vendor success fee**, invoiced to the vendor when a contract is signed through a Vandelay package. This replaces what vendors already spend on leads.
+3. **Verification plans** for lenders and insurers who check receipts at volume.
+4. **Per-call sats** over L402. This brings in less money but buys reach.
+
+**Getting customers:**
+- **Supply first.** Give 3 to 5 modular vendors a free `catalog.map`, so every agent can solve against their modules.
+- **Be the tool assistants already call.** List the MCP server in the Claude and ChatGPT connector directories and the public MCP registries, so an "Can I build an ADU?" question to any assistant ends in a Vandelay call.
+- **Be our own first agent.** Few homeowners have agents today, so the front door runs a Vandelay agent for them.
+- **Free hook.** `intent.validate`, `rules.check` and `receipt.verify` stay free.
+
 ## Risks
 
 - **Timing.** Few people have an agent they would trust with a six-figure decision yet. We will watch our own agent traffic and keep the approval viewer good enough for a person to use directly.
