@@ -12,6 +12,8 @@
   "dependencies": {
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
+    "@vandelay/agent": "workspace:*",
+    "@vandelay/engine-home": "workspace:*",
     "@vandelay/kernel": "workspace:*",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

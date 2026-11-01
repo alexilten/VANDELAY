@@ -27,7 +27,7 @@ export const MATERIALS = ['timber', 'corten', 'blackSteel', 'concrete', 'glass',
 export type MaterialId = (typeof MATERIALS)[number];
 
 export type SolidRole =
-  | 'module' | 'deck' | 'roof' | 'pier' | 'plinth' | 'glazing' | 'canopy' | 'rail'
+  | 'module' | 'deck' | 'roof' | 'pier' | 'plinth' | 'glazing' | 'canopy' | 'rail' | 'stair'
   // From the Home engine:
   | 'wall' | 'bridge' | 'shutter'
   // Viewer-only, for the venue example:
@@ -53,6 +53,8 @@ export interface Solid {
   /** Degrees about the box's local X axis, for raked stands and shed roofs. */
   readonly tilt?: number;
   readonly mechanism?: Mechanism;
+  /** Which module this solid belongs to, when the engine says. */
+  readonly module?: string;
 }
 
 export interface Plant {
