@@ -1,7 +1,9 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { App } from './App';
 import { EXAMPLES } from './data/examples';
+import { promptTool, receiptClaims } from '@vandelay/agent';
+import { approvalLink } from './approve/verify';
 
 afterEach(cleanup);
 
@@ -85,3 +87,34 @@ describe('home engine', () => {
   });
 });
 
+
+describe('approval viewer', () => {
+  afterEach(() => {
+    window.location.hash = '';
+  });
+
+  it('opens from the header and explains bad input', async () => {
+    render(<App />);
+    expect(screen.getByRole('link', { name: 'Review a design' }).getAttribute('href')).toBe('#/approve');
+    window.location.hash = '#/approve';
+    fireEvent(window, new HashChangeEvent('hashchange'));
+    expect(await screen.findByRole('heading', { name: 'Review a design' })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Or paste it'), { target: { value: '{"hello":1}' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Check' }));
+    expect(screen.getByRole('alert').textContent).toMatch(/receipt/);
+  });
+
+  it('rebuilds a design from a share link and lets the person approve it', { timeout: 20000 }, async () => {
+    const input = { prompt: 'a one-bedroom backyard cottage' };
+    const result = JSON.parse(JSON.stringify(promptTool.run(input))) as Record<string, unknown>;
+    const claims = receiptClaims({ tool: promptTool.name, input, result, issuedAt: '2026-11-01T12:00:00.000Z', keyId: 'vandelay:0123456789abcdef' });
+    window.location.hash = approvalLink('', { ...claims, alg: 'Ed25519', sig: 'AA' }, input);
+    render(<App />);
+    const status = await screen.findByRole('status', {}, { timeout: 8000 });
+    await waitFor(() => expect(status.textContent).toMatch(/Rebuilt and matches/), { timeout: 8000 });
+    expect(screen.getAllByRole('radio').length).toBeGreaterThanOrEqual(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+    expect(screen.getByText(/^Approved: /)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Download record' })).toBeTruthy();
+  });
+});

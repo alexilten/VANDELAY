@@ -122,14 +122,21 @@ function toLive(o: HomeOption, best: boolean): LiveOption {
   };
 }
 
+/** Engine options (from the engine or from a signed result) → cards. The highest score is marked best fit. */
+export function liveOptions(options: readonly HomeOption[]): LiveOption[] {
+  const scores = options.map((o) => o.result.scores.overall?.value ?? 0);
+  const best = scores.indexOf(Math.max(...scores));
+  return options.map((o, i) => toLive(o, i === best));
+}
+
+export { siteFacts };
+
 /** Three engine options for the brief, or null if the engine could not produce them. */
 export function liveHome(brief: string, picks: readonly number[]): LiveHome | null {
   try {
     const { options } = optionsFromPrompt(homePrompt(brief, picks), SITE);
     if (!Array.isArray(options) || options.length < 3) return null;
-    const scores = options.map((o) => o.result.scores.overall?.value ?? 0);
-    const best = scores.indexOf(Math.max(...scores));
-    const live = options.slice(0, 3).map((o, i) => toLive(o, i === best)) as unknown as LiveHome['options'];
+    const live = liveOptions(options.slice(0, 3)) as unknown as LiveHome['options'];
     return { options: live, site: siteFacts(SITE, (picks[2] ?? 1) === 1) };
   } catch {
     return null;
