@@ -18,6 +18,14 @@ A **building compiler** that goes from intent to permit to factory, for any buil
 
 ## The product
 
+### Built for people who aren't designers
+
+Vandelay is for normal people, not just designers and architects. Anyone should be able to design a building without training.
+
+- **Super simple and intuitive**, with an Apple aesthetic: clean, minimal and beautiful.
+- **One screen.** The whole experience lives on a single screen, with friendly, collapsible options and widgets instead of long pages to scroll and lots of clicking.
+- **Desktop and mobile.** It is a desktop web app first, with a vertical mobile layout as well.
+
 ### Front door
 
 The homepage is one question, "What would you like to build?", with a prompt box and four categories:
