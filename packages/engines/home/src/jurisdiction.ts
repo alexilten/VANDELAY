@@ -6,11 +6,11 @@
  * value was computed (its trace).
  */
 import {
-  edgeNormal, regionLookup, runRules, US_CA,
-  type AduInput, type CheckResult as RuleCheck, type HomeIntent, type Point2, type Region, type RuleReport,
+  CA_MAX_SIDE_REAR_SETBACK, edgeNormal, regionLookup, rotate2, runRules, US_CA,
+  type AduInput, type GroundSampler, type CheckResult as RuleCheck, type HomeIntent, type Point2, type Region, type RuleReport,
 } from '@vandelay/kernel';
 import type { Catalog } from './catalog.ts';
-import type { CheckResult, PlacedModule, Traced } from './types.ts';
+import type { CheckResult, PlacedModule, Solid, Traced } from './types.ts';
 
 const REGIONS: readonly Region<AduInput>[] = [US_CA];
 const lookup = regionLookup(REGIONS);
@@ -19,7 +19,7 @@ const lookup = regionLookup(REGIONS);
 export const ENGINE_INTERPRETATIONS = {
   livable: 'Interior livable space is taken as each module’s floor inside its walls (Vandelay reading; the catalog does not yet separate unconditioned space).',
   height: 'Height is measured from the lowest existing grade under the footprint to the top of the roof (Vandelay assumption; the local code sets the method).',
-  clearance: 'Clearances are measured from the module walls to each lot line; the deck and bridge are not counted (Vandelay reading).',
+  clearance: 'Clearances are measured from the module walls to each lot line; the deck, bridge and roof eaves are not counted (Vandelay reading). Raised decks and eaves may count toward setbacks under local code; see the projections check.',
 } as const;
 
 export interface DerivedFacts {
@@ -126,13 +126,70 @@ const interpretationsFor = (r: RuleCheck): string[] => {
   return out;
 };
 
+/** Deck height above grade at which many local codes start counting a deck toward setbacks (about 30 in; common, unverified, varies by city). */
+export const RAISED_DECK_HEIGHT = 762;
+
+const corners = (s: Solid): Point2[] => {
+  const hx = s.size[0] / 2, hy = s.size[1] / 2;
+  return ([[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]] as Point2[]).map((p) => {
+    const q = rotate2(p, s.rotation);
+    return [s.center[0] + q[0], s.center[1] + q[1]] as Point2;
+  });
+};
+
+/**
+ * Raised decks and roof eaves inside the 4 ft side and rear clearance that
+ * California guarantees. Not a state rule: local codes decide whether they
+ * count, so this is a 'review' item, never a fail.
+ */
+export const projectionCheck = (intent: HomeIntent, solids: readonly Solid[], ground: GroundSampler): CheckResult => {
+  const boundary = intent.body.site.boundary;
+  const kinds = edgeKinds(intent);
+  const id = 'vandelay.assumption.projections-in-setback';
+  const near: string[] = [];
+  let closest = Infinity;
+  for (const s of solids) {
+    if (s.role !== 'deck' && s.role !== 'roof') continue;
+    const pts = corners(s);
+    const top = s.center[2] + s.size[2] / 2;
+    if (s.role === 'deck' && !pts.some((p) => top - ground(p) > RAISED_DECK_HEIGHT)) continue;
+    boundary.forEach((a, i) => {
+      if (kinds[i] === 'front') return;
+      const n = edgeNormal(boundary, i);
+      const d = Math.min(...pts.map((p) => -((p[0] - a[0]) * n[0] + (p[1] - a[1]) * n[1])));
+      if (d < CA_MAX_SIDE_REAR_SETBACK) {
+        closest = Math.min(closest, d);
+        const what = s.role === 'deck' ? 'raised deck' : 'roof eave';
+        if (!near.includes(`${what} (${kinds[i]})`)) near.push(`${what} (${kinds[i]})`);
+      }
+    });
+  }
+  const interpretations = [
+    `A deck counts as raised when its surface is more than ${RAISED_DECK_HEIGHT} mm (about 30 in) above existing grade, a threshold many local codes use; unverified and city-specific.`,
+    'Whether raised decks and roof eaves count toward ADU setbacks is set by local code, not state law.',
+  ];
+  if (!near.length) {
+    return { ruleId: id, status: 'pass', message: 'No raised deck or roof eave sits within 4 ft of a side or rear lot line.', interpretations };
+  }
+  return {
+    ruleId: id,
+    status: 'review',
+    message: `A ${near.join(' and a ')} sits within 4 ft of the lot line. Check whether the local code counts it toward the setback.`,
+    measured: { value: Math.round(closest), unit: 'mm', formula: 'shortest distance from a raised deck or roof eave corner to a side or rear lot line', reads: ['/body/site/boundary', '/body/design/placement'], rules: [id] },
+    limit: CA_MAX_SIDE_REAR_SETBACK,
+    interpretations,
+  };
+};
+
 export interface JurisdictionChecks {
   readonly checks: readonly CheckResult[];
   readonly report?: Omit<RuleReport, 'results'>;
 }
 
 /** Runs the jurisdiction's rules when the intent names one; otherwise returns nothing. */
-export const jurisdictionChecks = (intent: HomeIntent, facts: DerivedFacts, lotArea: number): JurisdictionChecks => {
+export const jurisdictionChecks = (
+  intent: HomeIntent, facts: DerivedFacts, lotArea: number, solids: readonly Solid[], ground: GroundSampler,
+): JurisdictionChecks => {
   const j = intent.body.site.jurisdiction;
   if (!j) return { checks: [] };
   const region = lookup(j.region);
@@ -149,7 +206,7 @@ export const jurisdictionChecks = (intent: HomeIntent, facts: DerivedFacts, lotA
   const { results, ...report } = runRules(region, input, lookup);
   return {
     report,
-    checks: results.map((r) => {
+    checks: [...results.map((r) => {
       const measured = traceFor(r, facts);
       return {
         ruleId: r.ruleId,
@@ -161,6 +218,6 @@ export const jurisdictionChecks = (intent: HomeIntent, facts: DerivedFacts, lotA
         ...(measured ? { measured } : {}),
         ...(r.limit !== undefined ? { limit: r.limit } : {}),
       };
-    }),
+    }), projectionCheck(intent, solids, ground)],
   };
 };

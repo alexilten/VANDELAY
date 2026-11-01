@@ -61,6 +61,10 @@ export const RULES = {
     id: 'vandelay.jurisdiction.loaded', topic: 'Jurisdiction rules', kind: 'engineer-review', source: 'The cited rules library (packages/kernel/src/rules)', verification: 'n/a',
     statement: 'Says when the intent names a jurisdiction whose rules for this use are not loaded yet, so only intent zoning values were checked.',
   },
+  'vandelay.assumption.projections-in-setback': {
+    id: 'vandelay.assumption.projections-in-setback', topic: 'Raised decks and eaves', kind: 'assumption', source: ASSUMPTION, verification: 'n/a',
+    statement: 'Flags for review a raised deck (over about 30 in above grade) or roof eave within the 4 ft side or rear clearance; local code decides whether it counts.', value: 762,
+  },
   'vandelay.review.structure': {
     id: 'vandelay.review.structure', topic: 'Structure and soils', kind: 'engineer-review', source: 'Always referred to a licensed engineer', verification: 'n/a',
     statement: 'Pier sizes, bracing, footings and soils are conceptual and need engineering.',

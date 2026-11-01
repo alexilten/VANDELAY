@@ -1,6 +1,7 @@
 import { applyPatch, exampleAduIntent, exampleHomeIntent, patchHomeIntent, validateHomeIntent, type HomeIntent } from '@vandelay/kernel';
 import { describe, expect, it } from 'vitest';
 import { evaluate, proposeOptions, type HomeOption, type HomeResult } from './index.ts';
+import { projectionCheck } from './jurisdiction.ts';
 
 const opts = (i: HomeIntent) => {
   const r = proposeOptions(i);
@@ -58,6 +59,25 @@ describe('California ADU rules on Home options', () => {
     const res = proposeOptions(big);
     expect(Array.isArray(res)).toBe(false);
     expect(!Array.isArray(res) && res.issues.some((i) => i.message.includes('us-ca.adu.size.detached-cap'))).toBe(true);
+  });
+
+  it('flags raised decks and eaves near side and rear lines for local review', () => {
+    for (const o of [...flat, ...slope]) {
+      const c = o.result.checks.find((ch) => ch.ruleId === 'vandelay.assumption.projections-in-setback')!;
+      expect(['pass', 'review']).toContain(c.status);
+      expect(c.interpretations?.join(' ')).toMatch(/local code/);
+    }
+  });
+
+  it('asks for review when a raised deck sits within 4 ft of a side line, but not a low one', () => {
+    const intent = exampleAduIntent('flat');
+    const deck = (z: number) => ({ id: 'd', role: 'deck' as const, material: 'timber' as const, center: [1500, 18000, z] as const, size: [2400, 4000, 150] as const, rotation: 0 });
+    const ground = () => 0;
+    const high = projectionCheck(intent, [deck(1500)], ground);
+    expect(high.status).toBe('review');
+    expect(high.message).toMatch(/raised deck \(side\)/);
+    expect(high.measured?.value).toBe(300);
+    expect(projectionCheck(intent, [deck(400)], ground).status).toBe('pass');
   });
 
   it('says plainly when the rules for this use or region are not loaded', () => {

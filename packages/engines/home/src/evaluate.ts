@@ -355,7 +355,7 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
         : { ruleId: 'vandelay.assumption.step-free-bridge', status: 'warn', limit: bridgeMax, message: 'No short level bridge reaches the ground; step-free entry would need a ramp or a lift.' },
   );
   const facts = deriveFacts(intent, c, modules, quantities.height!, ctx.lotArea);
-  const juris = jurisdictionChecks(intent, facts, ctx.lotArea);
+  const juris = jurisdictionChecks(intent, facts, ctx.lotArea, solids, ground);
   checks.push(...juris.checks);
   checks.push({ ruleId: 'vandelay.review.structure', status: 'review', message: RULES['vandelay.review.structure'].statement });
   checks.push({ ruleId: 'vandelay.review.delivery', status: 'review', message: RULES['vandelay.review.delivery'].statement });
