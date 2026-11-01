@@ -6,11 +6,14 @@
 
 Vandelay is the AI design-and-build platform for the built world. Anyone can answer one question, **"What would you like to build?"**, and get a design that is verified, priced and ready to fabricate on their real site.
 
+**Agent-first (decided 2026-11-01).** Most of the time, the one asking will be an agent working for a person, a vendor, an engineer or a lender. Vandelay is the neutral compiler and trust layer they all call: intent in, verified design and a signed receipt out, paid per call. People meet Vandelay in the **approval viewer**, where they see a design and sign off. See [AGENTS.md](./AGENTS.md).
+
 ## Principles
 
 1. **Buildings get compiled, not drawn.** Intent is the source of truth. Geometry, drawings, quantities and cost are all derived from it.
 2. **Agents propose, engines verify.** The AI never writes geometry or numbers directly. Deterministic engines generate them, rule checks gate them, and every number can answer "why?"
 3. **Design and delivery are one loop.** Site, code, cost, vendors and fabrication are answered together, not handed off in sequence.
+4. **Every answer carries a receipt.** Any agent can check a result again and get the same hash, so no one has to trust anyone's word.
 
 ## The ten-year goal
 
@@ -20,7 +23,7 @@ A **building compiler** that goes from intent to permit to factory, for any buil
 
 ### Built for people who aren't designers
 
-Vandelay is for normal people, not just designers and architects. Anyone should be able to design a building without training.
+Vandelay is for normal people, not just designers and architects. Anyone should be able to design a building without training. Agent-first, this is the approval viewer and the demo front door: the screens a person sees.
 
 - **Super simple and intuitive**, with an Apple aesthetic: clean, minimal and beautiful.
 - **One screen.** The whole experience lives on a single screen, with friendly, collapsible options and widgets instead of long pages to scroll and lots of clicking.
@@ -62,7 +65,7 @@ It should look like Apple made it:
 - **Beachhead:** small residential (ADUs and prefab homes) in one region. California is likely but **not yet confirmed**.
 - **Design is free.** The **build package** is paid: permit drawings, schedules, bill of materials, vendor quotes and fabrication files.
 - **Later revenue:** vendor and builder marketplace fees, Pro seats for studios, and an API for developers and lenders.
-- **Payments:** cards by default. Bitcoin Lightning is an optional method through a payments provider. Vandelay never runs a custodial wallet, because that would make it a money transmitter.
+- **Payments:** agents pay per call over Bitcoin Lightning (L402), with x402 next, priced in dollars. Build packages are paid in dollars after a person approves them. Vandelay only receives payment for its own services. It never runs a custodial wallet and never routes customer funds, because that would make it a money transmitter.
 - **The stadium (Venue) is the flagship showcase and Pro tool, not the first market.**
 
 ## Platform architecture
@@ -71,8 +74,8 @@ It should look like Apple made it:
 | --- | --- |
 | `packages/kernel` | Intent schema, geometry, a cited rules library, and studies (cost, carbon, sun, egress, pro forma). Pure TypeScript and deterministic, with no three.js. |
 | `packages/engines/*` | One typology engine per category. Home first, then Venue (the stadium engine proved in the HOK proof of concept), then Business and Mixed-use. |
-| `packages/agent` | Exposes the engines as typed tools (MCP) and runs the loop: brief → intent → engine → checks → explanation. |
-| `apps/web` | The homepage, the flow and the design system. |
+| `packages/agent` | Exposes the engines as typed tools over MCP (the main door) and runs the loop: brief → intent → engine → checks → explanation, with a signed receipt. |
+| `apps/web` | The approval viewer, the demo front door and the design system. |
 
 - **Stack:** Vite, React, React Three Fiber, three.js, rhino3dm, vitest and zustand, in a TypeScript monorepo.
 - **Conventions:** millimetres internally, Z up, and a versioned intent JSON.

@@ -3,15 +3,19 @@
 > **Status:** proposal, written 2026-11-01. Nothing here settles an [open decision](#9-open-decisions-this-plan-depends-on).
 > **Rule for numbers.** Every market or funding figure below links to its source in [§10](#10-sources). Every Vandelay target is marked **target** and is a goal we set, not a forecast or market data. Anything not yet checked against a primary source is marked **unverified**.
 
+> **Agent-first (decided 2026-11-01).** Agents are the main customer; the human app is the approval viewer. See [AGENTS.md](./AGENTS.md). The stages below are updated to match; new gates are marked **proposed**.
+
+> **Pace (2026-11-01):** windows are now weeks, not years (see [ROADMAP.md](./ROADMAP.md)). Funding stages, runway and gates that depend on partners, permits or cities keep their own pace.
+
 See [VISION.md](./VISION.md) for the why and [ROADMAP.md](./ROADMAP.md) for the product phases. This plan ties those phases to the funding stages, says what has to be true at each one, and says how we'll know.
 
 ---
 
 ## 1. The bet in one paragraph
 
-Construction is one of the largest and least productive parts of the economy. McKinsey Global Institute estimated about **$10 trillion** a year of global construction spending, with labour productivity growing about **1% a year** over two decades against **2.8%** for the whole economy, and about **$1.6 trillion** of value from closing the gap [S1]. In our likely beachhead, California permitted about **1,336 ADUs in 2016** and roughly **39,000 in 2024** after state reforms [S2, S3; the 2024 figure is from a secondary compilation and is unverified]. Design for a small building is still slow, expensive and done by hand. Vandelay's bet is that a **building compiler** (intent in; verified geometry, drawings, cost and fabrication files out) lets a normal person go from "What would you like to build?" to a buildable, priced package, and that each package we deliver makes the engines, rules library and vendor network better.
+Construction is one of the largest and least productive parts of the economy. McKinsey Global Institute estimated about **$10 trillion** a year of global construction spending, with labour productivity growing about **1% a year** over two decades against **2.8%** for the whole economy, and about **$1.6 trillion** of value from closing the gap [S1]. In our likely beachhead, California permitted about **1,336 ADUs in 2016** and roughly **39,000 in 2024** after state reforms [S2, S3; the 2024 figure is from a secondary compilation and is unverified]. Design for a small building is still slow, expensive and done by hand. Vandelay's bet is that a **building compiler** (intent in; verified geometry, drawings, cost and fabrication files out) lets a normal person, or the agent working for them, go from "What would you like to build?" to a buildable, priced package, and that each package we deliver makes the engines, rules library and vendor network better. Agent-first, Vandelay is the neutral compiler and trust layer that homeowner, vendor, engineer and lender agents all call, paid per call.
 
-**Why now (our reading, not data):** LLM agents can turn a plain-language brief into structured intent; deterministic engines can make that intent trustworthy; ADU and lot-split reform created a large, repeatable, small-building market; and factory-built modules give us a catalog to design against.
+**Why now (our reading, not data):** LLM agents can turn a plain-language brief into structured intent, and since 2025 they have open standards to call tools (MCP), talk to each other (A2A) and pay per call (L402, x402); deterministic engines can make that intent trustworthy; ADU and lot-split reform created a large, repeatable, small-building market; and factory-built modules give us a catalog to design against.
 
 ## 2. What a top-tier investor has to believe
 
@@ -61,29 +65,30 @@ The agent never writes geometry or numbers. If a check fails, the option is not 
 | Permit → Build | **Built units** and **GMV through vendors** | B4: marketplace. |
 | Any → Return | **Repeat and referral rate** (homeowners, studios, vendors) | B1, B4. |
 
-**North star (proposed): verified build packages delivered per month.** It needs demand, quality and payment at once, and it leads every later revenue line.
+**North star (proposed): verified build packages delivered per month**, counting packages bought through agents. It needs demand, quality and payment at once, and it leads every later revenue line. **Reach metric:** paid agent calls per week.
 
 ## 4. The stages
 
 Each stage has a **gate**. We move on when the gate is met, not when the calendar says so. Product phases are from [ROADMAP.md](./ROADMAP.md). Funding stages line up with them but are a choice, not a requirement (see the open decision on funding path).
 
-### Stage 0 · Prove the magic (now → month 6) · Roadmap Phase 0 · Raise: pre-seed, optional
+### Stage 0 · Prove the magic (weeks 0–2) · Roadmap Phase 0 · Raise: pre-seed, optional
 
-**Goal:** a stranger types a sentence and gets three real home options on a real-looking site in under five minutes.
+**Goal (proposed, agent-first):** an outside agent, with no human help, gets three verified home options with signed receipts in under five minutes, and a person can open and approve one in the viewer. *(Was: a stranger types a sentence and gets three options in under five minutes.)*
 
-**Build:** monorepo, kernel (intent schema v0, geometry, cited rules), front door, Home engine v0 on a sloped lot, venue engine behind the tool API as the showcase.
+**Build:** monorepo, kernel (intent schema v0, geometry, cited rules), Home engine v0 on a sloped lot, an MCP server for the engine tools, signed receipts, the approval viewer (the front door stays as the demo), venue engine behind the tool API as the showcase.
 
 **Milestones**
 - M0.1 Intent schema v0 and Home engine v0 merged, with deterministic tests.
-- M0.2 Front door live on a public URL with the full flow on one screen, desktop and vertical mobile.
-- M0.3 20 unaided user tests with non-designers, recorded.
+- M0.2 MCP server live, with signed receipts and a free `receipt.verify`.
+- M0.2b Approval viewer live on a public URL: open a receipt, see the design in 3D with its checks, approve. One screen, desktop and vertical mobile.
+- M0.3 Three outside agents (for example Claude, ChatGPT and an open-source one) complete the flow unaided; 20 user tests of the approval viewer with non-designers, recorded.
 - M0.4 Waitlist open; venue showcase demo recorded.
 - M0.5 Name cleared or replaced before any public launch.
 
 **Metrics (targets)**
 | Metric | Target |
 | --- | --- |
-| Median time to three options | **< 5 min** (the Phase 0 gate) |
+| Median time to three options, agent call to receipts | **< 5 min** (the Phase 0 gate) |
 | Options completion rate in user tests | **≥ 70%** target |
 | Rule-check pass rate on shown options | **100%** (failing options are never shown) |
 | Waitlist sign-ups | **1,000** target |
@@ -95,11 +100,11 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** non-designers can't finish the flow even after three design iterations.
 
-### Stage 1 · Prove it's real and people pay (months 6–18) · Roadmap Phase 1 · Raise: seed
+### Stage 1 · Prove it's real and people pay (weeks 2–8) · Roadmap Phase 1 · Raise: seed
 
 **Goal:** real homeowners on real parcels in one region buy build packages, and the packages get permitted.
 
-**Build:** parcel, terrain and zoning data for one region; two or three modular vendor catalogs; a cost estimate in dollars; a permit set stamped by partner architects; checkout (cards; Lightning optional through a provider, never custodial).
+**Build:** parcel, terrain and zoning data for one region; two or three modular vendor catalogs; a cost estimate in dollars; a permit set stamped by partner architects; paid agent calls over L402 (Lightning, priced in dollars, never custodial), then x402; packages paid in dollars after a person approves them in the viewer.
 
 **Milestones**
 - M1.1 Launch region chosen and its zoning rules encoded with citations.
@@ -123,11 +128,11 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** packages don't get permitted, or homeowners won't pay at any price we test. Fallback: sell the compiler to vendors or studios first (the open "first paying customer" decision).
 
-### Stage 2 · Prove it compounds (years 1.5–3) · Roadmap Phase 2 · Raise: Series A
+### Stage 2 · Prove it compounds (weeks 8–16) · Roadmap Phase 2 · Raise: Series A
 
 **Goal:** a repeatable engine for adding regions, vendors and building types, and a marketplace that starts to run itself.
 
-**Build:** vendor marketplace with quotes, more regions, Business and Mixed-use engines, Pro mode for studios, IFC tested in Revit.
+**Build:** vendor agents quoting against our intent over A2A (a protocol we referee, not a marketplace we run), more regions, Business and Mixed-use engines, Pro mode for studios, IFC tested in Revit.
 
 **Milestones**
 - M2.1 Second and third regions live, each cheaper and faster to add than the first.
@@ -148,7 +153,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Kill or pivot signal:** each new region costs as much as the first, which would mean we're a services business.
 
-### Stage 3 · Delivery brain (years 3–5) · Roadmap Phase 3 · Raise: Series B
+### Stage 3 · Delivery brain (weeks 16–26) · Roadmap Phase 3 · Raise: Series B
 
 **Goal:** the design carries through to fabrication and site, so changes flow both ways.
 
@@ -156,7 +161,7 @@ Each stage has a **gate**. We move on when the gate is met, not when the calenda
 
 **Lead metrics:** units built through Vandelay, vendor GMV, share of packages that reach fabrication, change orders per project (lower is better), and API customers (lenders, developers).
 
-### Stage 4 · Compiler (years 5–10) · Roadmap Phase 4 · Growth
+### Stage 4 · Compiler (week 26 on) · Roadmap Phase 4 · Growth
 
 **Goal:** intent to permit to factory for any building type, with automated permit checks and an engine SDK for third parties.
 
@@ -199,7 +204,9 @@ Keep it to one screen, like the product.
 | **Katerra-style sprawl** | Doing everything at once burned $2B+ [S5]. | Asset-light; one wedge; gates before new phases. | Starting Phase 2 work before the Phase 1 gate. |
 | **Funding climate** | The time from seed to A keeps growing [S10]. | Plan 24+ months of runway; revenue early. | Runway under 12 months without a clear next gate. |
 | **Name and IP** | "Vandelay" is a placeholder; HOK code is not cleared. | Trademark clearance before launch; no HOK code ported until IP confirmed. | Launch date set before clearance. |
-| **Payments regulation** | Holding customer funds could make us a money transmitter. | Cards via a processor; Lightning only via a provider; no custody. | Any feature that holds funds. |
+| **Payments regulation** | Holding customer funds could make us a money transmitter. | We only receive payment for our own calls and packages; never escrow or route a homeowner's money to a vendor; hosted provider or remote signer for Lightning; counsel review before paid calls. | Any feature that holds or forwards funds. |
+| **Agent adoption timing** | The agent-first bet depends on people trusting agents with big decisions. | The approval viewer is good enough for people without an agent; watch our own agent traffic. | Paid agent calls flat for two quarters. |
+| **Agent manipulation** | Vendor agents may send crafted inputs or scrape the rules library. | Strict schema validation; rate limits paid via L402; signed receipts. | Unusual call patterns from one caller. |
 | **Founder bandwidth** | Two of the founding seats are open. | Recruit the architect and modular-construction seats in Stage 0. | Stage 1 starts without them. |
 
 ## 8. Market size: what we know and what we don't
@@ -214,6 +221,7 @@ Investors will ask for TAM. We'll answer from sources, bottom-up, and say where 
 
 These stay open until Alex decides. Each one changes a stage above.
 
+- **First payment rail:** L402 first (recommended) or x402 first.
 - **Funding path:** raise a pre-seed on the demo (Stage 0) or wait for first revenue (Stage 1).
 - **Launch region:** California is likely, not confirmed. It sets the Stage 1 data and rules work.
 - **First paying customer:** homeowner, vendor or studio. It sets the Stage 1 funnel and pricing.
