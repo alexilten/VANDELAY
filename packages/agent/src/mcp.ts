@@ -46,6 +46,12 @@ export interface McpServerOptions {
   readonly info?: McpServerInfo;
   readonly tools?: readonly AnyTool[];
   readonly instructions?: string;
+  /**
+   * Extra fields for a successful result's structuredContent, such as a signed
+   * receipt. Gets the tool's own name and input and the result as it will be
+   * returned (always an object); must not change that result.
+   */
+  readonly decorate?: (tool: string, input: Record<string, unknown>, result: Record<string, unknown>) => Record<string, unknown> | undefined;
 }
 
 export const DEFAULT_INSTRUCTIONS = [
@@ -112,7 +118,10 @@ export const createMcpServer = (opts: McpServerOptions = {}) => {
     }
     try {
       const value = (tool.run as (input: unknown) => unknown)(args);
-      return ok(id, { content: [{ type: 'text', text: JSON.stringify(compactForModel(value)) }], structuredContent: structured(value), isError: toolFailed(value) });
+      const failed = toolFailed(value);
+      const base = structured(value);
+      const out = !failed && opts.decorate ? { ...base, ...opts.decorate(tool.name, args, base) } : base;
+      return ok(id, { content: [{ type: 'text', text: JSON.stringify(compactForModel(out)) }], structuredContent: out, isError: failed });
     } catch (e) {
       // A tool that throws got input it could not use: report it to the model, not as a protocol error.
       return ok(id, { content: [{ type: 'text', text: `tool error: ${e instanceof Error ? e.message : String(e)}` }], isError: true });

@@ -7,7 +7,9 @@
  *   PORT=8787 node apps/mcp/src/http.ts
  */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { createMcpServer, type McpServer } from '@vandelay/agent';
+import type { McpServer } from '@vandelay/agent';
+import { createVandelayServer } from './server.ts';
+import { signerFromEnv, type PublicKeyInfo } from './signing.ts';
 
 /** Requests larger than this are refused; an intent is a few kilobytes. */
 export const MAX_BODY_BYTES = 1_000_000;
@@ -15,6 +17,8 @@ export const MAX_BODY_BYTES = 1_000_000;
 export interface HttpOptions {
   /** Browser origins allowed to call. Requests with no Origin header (agents, curl) are always allowed. */
   readonly allowedOrigins?: readonly string[];
+  /** Published at /.well-known/vandelay-keys.json so anyone can check receipts offline. */
+  readonly publicKey?: PublicKeyInfo;
 }
 
 const send = (res: ServerResponse, status: number, body?: unknown, headers: Record<string, string> = {}): void => {
@@ -35,10 +39,13 @@ const readBody = (req: IncomingMessage): Promise<string | undefined> =>
     req.on('error', reject);
   });
 
-export const createHttpHandler = (mcp: McpServer = createMcpServer(), opts: HttpOptions = {}) =>
+export const createHttpHandler = (mcp: McpServer, opts: HttpOptions = {}) =>
   async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const url = new URL(req.url ?? '/', 'http://localhost');
     if (url.pathname === '/health') return send(res, 200, { ok: true, name: mcp.info.name, version: mcp.info.version });
+    if (url.pathname === '/.well-known/vandelay-keys.json') {
+      return opts.publicKey ? send(res, 200, { keys: [opts.publicKey] }, { 'access-control-allow-origin': '*' }) : send(res, 404, { error: 'no signing key' });
+    }
     if (url.pathname !== '/mcp') return send(res, 404, { error: 'not found; MCP lives at /mcp' });
 
     // The spec asks servers to check Origin, so a web page cannot drive a local server (DNS rebinding).
@@ -60,7 +67,8 @@ if (isMain) {
   const port = Number(process.env.PORT ?? 8787);
   const host = process.env.HOST ?? '127.0.0.1';
   const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-  createServer(createHttpHandler(createMcpServer(), { allowedOrigins })).listen(port, host, () => {
-    process.stderr.write(`vandelay mcp on http://${host}:${port}/mcp\n`);
+  const signer = signerFromEnv();
+  createServer(createHttpHandler(createVandelayServer(signer), { allowedOrigins, publicKey: signer.publicKey })).listen(port, host, () => {
+    process.stderr.write(`vandelay mcp on http://${host}:${port}/mcp, receipts signed by ${signer.publicKey.keyId}\n`);
   });
 }

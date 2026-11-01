@@ -44,7 +44,7 @@ Prices are set in **dollars** and converted at call time, so bitcoin's price nev
 | `intent.patch` | built | How agents negotiate: every counter-offer is an RFC 6902 patch that is validated and solved again |
 | `explain` | built | Answers "why?" for any number in a result |
 | `rules.check` | built inside the engine; to expose | Cited checks alone: is this lot allowed this ADU, and under which statute? |
-| `receipt.verify` | new | Free re-check of any package; this is the trust layer |
+| `receipt.verify` | built | Free re-check of any package; this is the trust layer |
 | `site.fetch` | new | Parcel, terrain and zoning for an address |
 | `catalog.map` | new | Vendors publish catalogs in our format so engines can solve against real modules |
 | `package.export` | new | Drawings, bill of materials and IFC for an engineer or a factory; priced in dollars |
