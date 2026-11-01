@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { homePrompt, liveHome } from './home';
+import { checkView, homePrompt, liveHome } from './home';
 
 describe('liveHome', () => {
   it('turns brief answers into prompt words', () => {
@@ -18,5 +18,22 @@ describe('liveHome', () => {
       expect(o.headline).toMatch(/sf$/);
     }
     expect(live!.site.map(([k]) => k)).toContain('Slope');
+  });
+});
+
+describe('checkView', () => {
+  it('carries citations and interpretations when a check has them', () => {
+    const v = checkView({
+      ruleId: 'us-ca.adu.height',
+      status: 'warn',
+      message: 'Height is close to the limit.',
+      why: 'The state sets a 16 ft minimum height allowance (Gov. Code § 66321).',
+      citations: [{ code: 'California Government Code', section: '§ 66321(b)(4)', title: 'ADU height', url: 'https://example.org/66321' }],
+      interpretations: ['Measured from lowest grade.'],
+    });
+    expect(v.why).toContain('66321');
+    expect(v.citations).toEqual([{ label: 'California Government Code § 66321(b)(4)', url: 'https://example.org/66321' }]);
+    expect(v.interpretations).toHaveLength(1);
+    expect(v.rule).toBeUndefined();
   });
 });

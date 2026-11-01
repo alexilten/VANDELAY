@@ -34,10 +34,12 @@ type Props = {
   geometry: OptionGeometry;
   /** True when the geometry comes from a real engine (still on an example site). */
   engine?: boolean;
+  /** Overlay controls, e.g. the checks chip. */
+  children?: ReactNode;
 };
 
 /** The live model of the chosen option, with a 2D sketch while it loads or when 3D isn't available. */
-export function ViewerPanel({ category, option, optionName, geometry, engine = false }: Props) {
+export function ViewerPanel({ category, option, optionName, geometry, engine = false, children }: Props) {
   const webgl = useMemo(hasWebGL, []);
   const [touched, setTouched] = useState(false);
   const fallback = (
@@ -64,6 +66,7 @@ export function ViewerPanel({ category, option, optionName, geometry, engine = f
       <div className="v-viewer__tags">
         <ExampleTag>{engine ? 'Engine model · example site' : 'Example model'}</ExampleTag>
       </div>
+      {children}
       {webgl ? <span className={`v-viewer__hint ${touched ? 'is-hidden' : ''}`}>Drag to look around</span> : null}
     </div>
   );

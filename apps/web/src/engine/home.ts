@@ -7,10 +7,28 @@
  * so the UI still labels everything as an example.
  */
 import { optionsFromPrompt } from '@vandelay/agent';
-import type { HomeOption } from '@vandelay/engine-home';
+import { RULES, type CheckResult, type HomeOption } from '@vandelay/engine-home';
 import { EXAMPLE_SITES, type SiteIntent } from '@vandelay/kernel';
 import type { Fact } from '../data/examples';
 import type { OptionGeometry } from '../viewer/geometry';
+
+export type CheckStatus = CheckResult['status'];
+
+/** One check, ready for a "why?" panel. */
+export interface CheckView {
+  readonly id: string;
+  readonly status: CheckStatus;
+  readonly message: string;
+  /** What the rule says and where its limit comes from. */
+  readonly rule?: { readonly topic: string; readonly statement: string; readonly source: string; readonly kind: string };
+  /** How the engine measured it. */
+  readonly formula?: string;
+  /** For cited rules: a sentence naming the code section. */
+  readonly why?: string;
+  readonly citations: readonly { readonly label: string; readonly url: string }[];
+  /** Readings that are Vandelay's interpretation, not settled law. Shown as unverified. */
+  readonly interpretations: readonly string[];
+}
 
 export interface LiveOption {
   readonly name: string;
@@ -19,6 +37,7 @@ export interface LiveOption {
   readonly metrics: readonly Fact[];
   readonly bestFit: boolean;
   readonly geometry: OptionGeometry;
+  readonly checks: readonly CheckView[];
 }
 
 export interface LiveHome {
@@ -58,6 +77,31 @@ function siteFacts(site: SiteIntent): Fact[] {
   return facts;
 }
 
+const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, review: 2, pass: 3, 'n/a': 4 };
+
+// Cited fields arrive with the jurisdiction rules work; read them only when present.
+type CitedCheck = CheckResult & {
+  readonly why?: string;
+  readonly citations?: readonly { readonly code?: string; readonly section?: string; readonly title?: string; readonly url?: string }[];
+  readonly interpretations?: readonly string[];
+};
+
+export function checkView(c: CitedCheck): CheckView {
+  const r = (RULES as Record<string, { topic: string; statement: string; source: string; kind: string } | undefined>)[c.ruleId];
+  return {
+    id: c.ruleId,
+    status: c.status,
+    message: c.message,
+    ...(r ? { rule: { topic: r.topic, statement: r.statement, source: r.source, kind: r.kind } } : {}),
+    ...(c.measured?.formula ? { formula: c.measured.formula } : {}),
+    ...(c.why ? { why: c.why } : {}),
+    citations: (c.citations ?? [])
+      .filter((x) => x.url)
+      .map((x) => ({ label: [x.code, x.section].filter(Boolean).join(' ') || x.title || 'Source', url: x.url! })),
+    interpretations: c.interpretations ?? [],
+  };
+}
+
 function toLive(o: HomeOption, best: boolean): LiveOption {
   const r = o.result;
   const area = r.quantities.floorArea?.value ?? 0;
@@ -75,6 +119,7 @@ function toLive(o: HomeOption, best: boolean): LiveOption {
     metrics,
     bestFit: best,
     geometry: { ...r.geometry, example: true },
+    checks: [...r.checks].sort((a, b) => ORDER[a.status] - ORDER[b.status]).map(checkView),
   };
 }
 

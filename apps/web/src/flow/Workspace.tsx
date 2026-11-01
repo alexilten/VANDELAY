@@ -6,6 +6,7 @@ import { useMedia } from '../lib/useMedia';
 import { ViewerPanel } from '../viewer/ViewerPanel';
 import { optionGeometry } from '../viewer/source';
 import { liveHome } from '../engine/home';
+import { Checks } from './Checks';
 import { SiteMap } from './SiteMap';
 
 type Props = {
@@ -130,7 +131,9 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
           open={open.options}
           onToggle={() => toggle('options')}
         >
-          <ViewerPanel category={category} option={chosen} optionName={pick.name} geometry={geometry} engine={Boolean(live)} />
+          <ViewerPanel category={category} option={chosen} optionName={pick.name} geometry={geometry} engine={Boolean(live)}>
+            {live?.options[chosen] ? <Checks checks={live.options[chosen].checks} /> : null}
+          </ViewerPanel>
           <div className="v-options" role="radiogroup" aria-label="Options">
             {options.map((o, i) => (
               <button

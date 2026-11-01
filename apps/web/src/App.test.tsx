@@ -70,4 +70,18 @@ describe('home engine', () => {
     expect(screen.getByText('Setbacks')).toBeTruthy();
     expect(screen.getByRole('button', { name: /Site.*Example site/ })).toBeTruthy();
   });
+
+  it('explains the checks for the chosen option', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Home' }));
+    const chip = screen.getByRole('button', { name: /Why\?/ });
+    expect(chip.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(chip);
+    const panel = screen.getByRole('dialog', { name: 'Checks for this option' });
+    expect(within(panel).getAllByRole('listitem').length).toBeGreaterThan(0);
+    expect(within(panel).getAllByText(/Source:/).length).toBeGreaterThan(0);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Checks for this option' })).toBeNull();
+  });
 });
+
