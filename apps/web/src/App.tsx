@@ -1,36 +1,43 @@
-import { CATEGORIES, mm } from '@vandelay/kernel';
-import { Canvas } from '@react-three/fiber';
-import { useApp } from './store.ts';
-import { toScene } from './units.ts';
+import { useState } from 'react';
+import { AmbientLight, Logo, ThemeToggle } from './design/components';
+import type { CategoryId } from './design/categories';
+import { FrontDoor } from './flow/FrontDoor';
+import { Workspace } from './flow/Workspace';
+import { guessCategory } from './lib/guess';
 
-// Placeholder front door. The real homepage and design system land in their own PR.
-// Example module size only (not real product data): 3.6 m × 9.6 m × 3.0 m.
-const MODULE = { w: mm(3600), d: mm(9600), h: mm(3000) };
+type Session = { category: CategoryId; brief: string };
 
 export function App() {
-  const { category, setCategory } = useApp();
+  const [session, setSession] = useState<Session | null>(null);
+  const start = (category: CategoryId, brief = '') => setSession({ category, brief });
+  const home = () => setSession(null);
+
   return (
-    <main className="shell">
-      <h1>What would you like to build?</h1>
-      <nav className="categories">
-        {CATEGORIES.map((c) => (
-          <button key={c} aria-pressed={c === category} onClick={() => setCategory(c)}>
-            {c}
-          </button>
-        ))}
-      </nav>
-      <div className="viewport">
-        <Canvas camera={{ position: [12, -14, 9], fov: 35 }}>
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[10, -6, 14]} intensity={1.2} />
-          <mesh position={[0, 0, toScene(MODULE.h) / 2]}>
-            <boxGeometry args={[toScene(MODULE.w), toScene(MODULE.d), toScene(MODULE.h)]} />
-            <meshStandardMaterial color="#e8e8ed" />
-          </mesh>
-          <gridHelper args={[40, 40]} rotation={[Math.PI / 2, 0, 0]} />
-        </Canvas>
+    <>
+      <AmbientLight />
+      <div className={`v-page ${session ? 'v-page--work' : ''}`}>
+        <header className="v-top">
+          <Logo onClick={home} />
+          <div className="v-top__end">
+            <ThemeToggle />
+            <span className="v-signin v-glass-soft">Sign in</span>
+          </div>
+        </header>
+        <main className="v-main" aria-live="polite">
+          {session ? (
+            <Workspace
+              key={session.category}
+              category={session.category}
+              brief={session.brief}
+              onCategory={(c) => setSession((s) => ({ brief: s?.brief ?? '', category: c }))}
+              onBrief={(b) => setSession({ brief: b, category: b ? guessCategory(b) : session.category })}
+            />
+          ) : (
+            <FrontDoor onStart={(brief) => start(brief ? guessCategory(brief) : 'home', brief)} onPick={(c) => start(c)} />
+          )}
+        </main>
+        <footer className="v-foot">Prototype · every figure shown is an example</footer>
       </div>
-      <p className="note">Example geometry</p>
-    </main>
+    </>
   );
 }
