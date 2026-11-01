@@ -4,7 +4,7 @@ export { Button } from './Button';
 export { CategoryTile } from './CategoryTile';
 export { ExampleTag } from './ExampleTag';
 export { Glass } from './Glass';
-export { Logo } from './Logo';
+export { Logo, LogoMark } from './Logo';
 export { Pill } from './Pill';
 export { PromptField } from './PromptField';
 export { Segmented } from './Segmented';
