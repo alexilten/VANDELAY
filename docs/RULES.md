@@ -40,6 +40,7 @@ Most of California's ADU law tells cities what they must **allow**, so these rul
 | `us-ca.adu.setback.side` / `.rear` | A city can require at most 4 ft; conversions need none | § 66314(d)(7) |
 | `us-ca.adu.setback.front` | Local value; may give way to an 800 sq ft ADU (returns `review`)* | § 66321(b)(3) |
 | `us-ca.adu.coverage` | Local value; an 800 sq ft ADU with 4 ft setbacks is protected* | § 66321(b)(3) |
+| `us-ca.adu.parking` | At most one space per ADU or per bedroom, and none near public transit, in a historic district, for conversions, near car share, and similar cases | § 66314(d)(10)–(11), § 66322(a) |
 | `us-ca.adu.path.ministerial-detached` | Fast-track for a detached ADU of up to 800 sq ft with 4 ft setbacks, within the height allowance | § 66323(a)(2) |
 | `us-ca.adu.path.ministerial-conversion` | Fast-track for a conversion or JADU, adding up to 150 sq ft | § 66323(a)(1) |
 
@@ -53,7 +54,7 @@ All California citations are **`secondary`** as of 2026-11-01. The official site
 
 ### Not covered yet
 
-- Parking (§ 66314(d)(10), § 66322), fees (§ 66311.5), fire sprinklers (§ 66314(d)(12)) and owner occupancy.
+- Fees (§ 66311.5), fire sprinklers (§ 66314(d)(12)) and owner occupancy.
 - Multifamily ADU counts (§ 66323(a)(3)–(4)), and ADU or JADU counts per lot.
 - Minimum size (efficiency units, Health & Safety Code § 17958.1).
 - How height is measured. State law doesn't define it, and local codes do. The Home engine owns this as a labelled Vandelay assumption (`vandelay.assumption.height-measurement`).
