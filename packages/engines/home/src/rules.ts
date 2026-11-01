@@ -57,6 +57,10 @@ export const RULES = {
     id: 'vandelay.assumption.step-free-bridge', topic: 'Step-free entry', kind: 'assumption', source: ASSUMPTION, verification: 'n/a',
     statement: 'When the brief asks for step-free entry, a level bridge no longer than this reaches existing grade from the entry floor.', value: 9000,
   },
+  'vandelay.jurisdiction.loaded': {
+    id: 'vandelay.jurisdiction.loaded', topic: 'Jurisdiction rules', kind: 'engineer-review', source: 'The cited rules library (packages/kernel/src/rules)', verification: 'n/a',
+    statement: 'Says when the intent names a jurisdiction whose rules for this use are not loaded yet, so only intent zoning values were checked.',
+  },
   'vandelay.review.structure': {
     id: 'vandelay.review.structure', topic: 'Structure and soils', kind: 'engineer-review', source: 'Always referred to a licensed engineer', verification: 'n/a',
     statement: 'Pier sizes, bracing, footings and soils are conceptual and need engineering.',
