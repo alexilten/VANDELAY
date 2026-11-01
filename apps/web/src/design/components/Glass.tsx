@@ -5,7 +5,7 @@ type GlassProps<T extends ElementType> = {
   className?: string;
 } & Omit<ComponentPropsWithoutRef<T>, 'as' | 'className'>;
 
-/** A frosted-glass surface. Renders a div unless `as` says otherwise. */
+/** A hairline panel surface (named Glass for history). Renders a div unless `as` says otherwise. */
 export function Glass<T extends ElementType = 'div'>({ as, className = '', ...rest }: GlassProps<T>) {
   const Tag = (as ?? 'div') as ElementType;
   return <Tag className={`v-glass ${className}`.trim()} {...rest} />;

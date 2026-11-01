@@ -7,16 +7,24 @@ body {
   font-size: var(--v-text-body);
   line-height: var(--v-leading);
   letter-spacing: var(--v-tracking);
+  font-feature-settings: "cv11", "ss01", "ss03";
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   transition: background-color var(--v-dur) ease, color var(--v-dur) ease;
 }
 button, input { font: inherit; color: inherit; letter-spacing: inherit; }
 button:focus-visible, input:focus-visible, a:focus-visible {
-  outline: 3px solid var(--v-color-accent);
-  outline-offset: 3px;
+  outline: 2px solid var(--v-color-accent);
+  outline-offset: 2px;
 }
+::selection { background: color-mix(in srgb, var(--v-color-accent) 28%, transparent); }
 .v-sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* The technical layer: small mono uppercase labels. */
+.v-label {
+  font-family: var(--v-font-mono); font-size: var(--v-text-label); font-weight: 500;
+  letter-spacing: var(--v-tracking-label); text-transform: uppercase; color: var(--v-color-ink-2);
 }

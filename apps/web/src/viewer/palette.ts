@@ -35,9 +35,9 @@ const MATERIALS: Record<MaterialId, MaterialLook> = {
 
 export const LIGHT: ScenePalette = {
   materials: MATERIALS,
-  ground: '#ecebe6',
+  ground: '#e9e8e3',
   plant: '#93a882',
-  lot: '#0071e3',
+  lot: '#f2541b',
   buildable: '#8e8e93',
   sky: '#ffffff',
   groundLight: '#d9d4c7',
@@ -53,12 +53,12 @@ export const DARK: ScenePalette = {
     blackSteel: { color: '#3a3a3e', roughness: 0.5, metalness: 0.55 },
     glass: { color: '#7fa6b8', roughness: 0.05, metalness: 0.3, opacity: 0.45 },
   },
-  ground: '#2c2c30',
+  ground: '#232427',
   plant: '#47593c',
-  lot: '#2997ff',
+  lot: '#ff6a33',
   buildable: '#86868b',
   sky: '#c9d3e3',
-  groundLight: '#1c1c1e',
+  groundLight: '#0e0f10',
   sun: 2.2,
-  fill: 0.95,
+  fill: 1.15,
 };
