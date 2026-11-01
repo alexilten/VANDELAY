@@ -19,7 +19,7 @@ export interface ModuleSpec {
   /** Outside dimensions in mm. Length runs along the module's own X. */
   readonly length: number;
   readonly width: number;
-  /** Finished floor to top of roof structure. */
+  /** Finished floor to top of roof structure. 3200 leaves about a 2.7 m ceiling under a 250 mm roof (example). */
   readonly height: number;
   /** Share of the glass side that is glazed, 0..1. */
   readonly glazing: number;
@@ -36,7 +36,8 @@ export interface Catalog {
   readonly floorDepth: number;
   readonly wall: number;
   readonly roof: { readonly thickness: number; readonly overhangGlass: number; readonly overhangOther: number };
-  readonly deck: { readonly depth: number };
+  /** 'downhill': the living deck (and its glass) goes on whichever long side the ground falls away from, so the floor can sit lower. */
+  readonly deck: { readonly depth: number; readonly side: 'glass' | 'downhill' };
   readonly pier: { readonly size: number; readonly spacing: number };
   /** Relative cost weights for site work, per metre of pier, bridge or stair (example weights). */
   readonly costPerMetre: { readonly pier: number; readonly bridge: number; readonly stair: number };
@@ -47,15 +48,15 @@ export const EXAMPLE_CATALOG: Catalog = {
   version: '0',
   example: true,
   modules: {
-    living: { kind: 'living', name: 'Living and dining', length: 8400, width: 4200, height: 3600, glazing: 0.85, costUnits: 10 },
-    core: { kind: 'core', name: 'Kitchen, bath and laundry', length: 6000, width: 4200, height: 3600, glazing: 0.3, costUnits: 11 },
-    bed: { kind: 'bed', name: 'Bedroom', length: 4800, width: 4200, height: 3600, glazing: 0.5, costUnits: 6 },
-    bath: { kind: 'bath', name: 'Bath', length: 3000, width: 4200, height: 3600, glazing: 0.2, costUnits: 5 },
+    living: { kind: 'living', name: 'Living and dining', length: 8400, width: 4200, height: 3200, glazing: 0.85, costUnits: 10 },
+    core: { kind: 'core', name: 'Kitchen, bath and laundry', length: 6000, width: 4200, height: 3200, glazing: 0.3, costUnits: 11 },
+    bed: { kind: 'bed', name: 'Bedroom', length: 4800, width: 4200, height: 3200, glazing: 0.5, costUnits: 6 },
+    bath: { kind: 'bath', name: 'Bath', length: 3000, width: 4200, height: 3200, glazing: 0.2, costUnits: 5 },
   },
   floorDepth: 300,
   wall: 150,
   roof: { thickness: 250, overhangGlass: 900, overhangOther: 300 },
-  deck: { depth: 2400 },
+  deck: { depth: 2400, side: 'downhill' },
   pier: { size: 450, spacing: 3000 },
   costPerMetre: { pier: 0.15, bridge: 0.6, stair: 0.4 },
 };

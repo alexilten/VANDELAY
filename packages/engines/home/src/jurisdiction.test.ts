@@ -44,6 +44,17 @@ describe('California ADU rules on Home options', () => {
     expect(side.measured?.formula).toMatch(/side lot line/);
   });
 
+  it('exposes the interior livable area the size rules use, next to the gross floor area', () => {
+    for (const o of [...flat, ...slope]) {
+      const q = o.result.quantities;
+      expect(q.interiorArea!.unit).toBe('mm2');
+      expect(q.interiorArea!.value).toBeLessThan(q.floorArea!.value);
+      expect(q.interiorArea!.formula).toMatch(/2 walls/);
+      // The 1,200 sq ft cap measures total floor area, which v0 takes as the gross module area.
+      expect(o.result.checks.find((c) => c.ruleId === 'us-ca.adu.size.detached-cap')?.measured?.value).toBe(q.floorArea!.value);
+    }
+  });
+
   it('a one-storey ADU on flat ground qualifies for fast-track approval', () => {
     expect(flat.every((o) => o.result.checks.find((c) => c.ruleId === 'us-ca.adu.path.ministerial-detached')?.status === 'pass')).toBe(true);
   });

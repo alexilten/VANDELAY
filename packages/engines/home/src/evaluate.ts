@@ -106,10 +106,33 @@ const footprint = (f: Frame, m: LocalModule, extraV: [number, number] = [0, 0]):
 const deckSides = (m: LocalModule, c: Catalog): [number, number] =>
   m.kind !== 'living' ? [0, 0] : m.glassSide === 1 ? [0, c.deck.depth] : [c.deck.depth, 0];
 
+/**
+ * Puts the living deck, and the glass that opens onto it, on the downhill long side when the
+ * catalog asks for it: the floor then only has to clear the ground under the module, not the
+ * higher ground on the uphill side, which keeps the home lower on a slope.
+ */
+export const orientDecks = (ctx: SiteContext, layout: LocalLayout, f: Frame): LocalLayout => {
+  if (ctx.catalog.deck.side !== 'downhill') return layout;
+  const d = ctx.catalog.deck.depth;
+  let changed = false;
+  const modules = layout.modules.map((m) => {
+    if (m.kind !== 'living') return m;
+    const plus = ctx.ground(moduleToSite(f, m, 0, m.width / 2 + d / 2));
+    const minus = ctx.ground(moduleToSite(f, m, 0, -m.width / 2 - d / 2));
+    const side: 1 | -1 = plus < minus - 1 ? 1 : minus < plus - 1 ? -1 : m.glassSide;
+    if (side === m.glassSide) return m;
+    changed = true;
+    return { ...m, glassSide: side };
+  });
+  return changed ? { ...layout, modules } : layout;
+};
+
 /** Cheap pre-check for option search: is every module and deck corner inside the buildable area? */
-export const fitsBuildable = (ctx: SiteContext, layout: LocalLayout, f: Frame): boolean =>
-  ctx.buildable.length >= 3 &&
-  layout.modules.every((m) => footprint(f, m, deckSides(m, ctx.catalog)).every((p) => insideConvex(ctx.buildable, p)));
+export const fitsBuildable = (ctx: SiteContext, layoutIn: LocalLayout, f: Frame): boolean => {
+  if (ctx.buildable.length < 3) return false;
+  const layout = orientDecks(ctx, layoutIn, f);
+  return layout.modules.every((m) => footprint(f, m, deckSides(m, ctx.catalog)).every((p) => insideConvex(ctx.buildable, p)));
+};
 
 // ── evaluation ───────────────────────────────────────────────────────────────
 
@@ -169,11 +192,12 @@ const pierPoints = (c: Catalog, length: number, vEdges: readonly number[]): [num
 export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: LocalLayout): HomeResult | HomeError => {
   const { intent, catalog: c, ground } = ctx;
   const body = intent.body;
-  const layout = layoutIn ?? layoutParti(choice.parti, ctx.program, c);
-  if (!layout) {
+  const planned = layoutIn ?? layoutParti(choice.parti, ctx.program, c);
+  if (!planned) {
     return { ok: false, issues: [{ path: `${P}/design/parti`, message: `a ${choice.parti} needs at least two bedroom or bath modules besides living and core` }] };
   }
   const f: Frame = { anchor: choice.anchor, rotation: choice.rotation };
+  const layout = orientDecks(ctx, planned, f);
   const pods = choice.foundation === 'piers' ? layout.modules.map(() => 0) : layout.modules.map((m) => m.wing);
   const podIds = [...new Set(pods)].sort((a, b) => a - b);
   const clear = RULES['vandelay.assumption.floor-clearance'].value;
@@ -253,6 +277,7 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
 
   // ── quantities
   const floorArea = layout.modules.reduce((s, m) => s + m.length * m.width, 0);
+  const interiorArea = layout.modules.reduce((s, m) => s + (m.length - 2 * c.wall) * (m.width - 2 * c.wall), 0);
   const pierLength = piers.reduce((s, p) => s + Math.max(0, p.height), 0);
   const maxPier = piers.reduce((s, p) => Math.max(s, p.height), 0);
   const minPierHeight = piers.reduce((s, p) => Math.min(s, p.height), Infinity);
@@ -281,6 +306,7 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
 
   const quantities: Record<string, Traced> = {
     floorArea: traced(floorArea, 'mm2', 'sum of module length × width (gross, outside dimensions)', [`${P}/brief`, `${P}/design/catalog`]),
+    interiorArea: traced(interiorArea, 'mm2', 'sum of (module length − 2 walls) × (module width − 2 walls): the interior livable area the ADU size rules check', [`${P}/brief`, `${P}/design/catalog`]),
     moduleCount: traced(layout.modules.length, 'count', 'living + core + one per bedroom + one per extra bathroom', [`${P}/brief/bedrooms`, `${P}/brief/bathrooms`]),
     pierCount: traced(piers.length, 'count', 'both long edges of each module and the deck edge, at or under the catalog spacing', [`${P}/design/catalog`]),
     pierLength: traced(pierLength, 'mm', 'sum of pier heights, ground to floor underside', [`${P}/site/terrain`, `${P}/design/placement`]),
