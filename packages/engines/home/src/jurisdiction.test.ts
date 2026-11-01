@@ -100,3 +100,46 @@ describe('California ADU rules on Home options', () => {
     expect(bad.ok && validateHomeIntent(bad.value).map((i) => i.path)).toEqual(['/body/site/jurisdiction/region', '/body/site/jurisdiction/lot/zoning', '/body/site/jurisdiction/lot/primaryExists']);
   });
 });
+
+describe('height measurement method', () => {
+  const withMethod = (i: HomeIntent, m: 'lowestGrade' | 'aboveGrade') =>
+    patchHomeIntent(i, [{ op: 'add', path: '/body/site/zoning/heightMethod', value: m }]);
+
+  it('measures above the grade directly below, never more than from the lowest grade', () => {
+    for (const site of ['flat', 'slopeAlong', 'slopeCross'] as const) {
+      for (const o of opts(exampleAduIntent(site))) {
+        const q = o.result.quantities;
+        expect(q.heightAboveGrade!.value).toBeLessThanOrEqual(q.heightLowestGrade!.value);
+        if (site === 'flat') expect(q.heightAboveGrade!.value).toBe(q.heightLowestGrade!.value);
+      }
+    }
+  });
+
+  it('lets a hillside ADU be checked the way many cities measure, and says which way', () => {
+    const lowest = opts(exampleAduIntent('slopeAlong'));
+    const res = withMethod(exampleAduIntent('slopeAlong'), 'aboveGrade');
+    if (!res.ok) throw new Error('patch failed');
+    const above = opts(res.value);
+    const fast = (os: HomeOption[]) => os.filter((o) => o.result.checks.find((c) => c.ruleId === 'us-ca.adu.path.ministerial-detached')?.status === 'pass').length;
+    expect(fast(above)).toBeGreaterThanOrEqual(fast(lowest));
+    const h = above[0]!.result.checks.find((c) => c.ruleId === 'us-ca.adu.height.detached')!;
+    expect(h.measured?.formula).toMatch(/directly below/);
+    expect(h.interpretations?.join(' ')).toMatch(/verify against the local code/);
+    expect(above[0]!.result.quantities.height!.value).toBe(above[0]!.result.quantities.heightAboveGrade!.value);
+  });
+
+  it('rejects an unknown method', () => {
+    const bad = applyPatch(exampleAduIntent('flat'), [{ op: 'add', path: '/body/site/zoning/heightMethod', value: 'eaves' }]);
+    expect(bad.ok && validateHomeIntent(bad.value).map((i) => i.path)).toEqual(['/body/site/zoning/heightMethod']);
+  });
+});
+
+describe('approval score', () => {
+  it('scores fast-track ADU approval only when the state rules ran', () => {
+    const flatAdu = opts(exampleAduIntent('flat'))[0]!.result;
+    expect(flatAdu.scores.approval?.value).toBe(1);
+    expect(flatAdu.scores.overall!.reads).toContain('/body/brief/use');
+    const home = evaluate(exampleHomeIntent('flat')) as HomeResult;
+    expect(home.scores.approval).toBeUndefined();
+  });
+});

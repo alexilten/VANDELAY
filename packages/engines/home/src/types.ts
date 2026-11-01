@@ -86,7 +86,7 @@ export interface CheckResult {
   readonly interpretations?: readonly string[];
 }
 
-export type ScoreId = 'view' | 'sun' | 'privacy' | 'cost' | 'lessGrading' | 'access' | 'overall';
+export type ScoreId = 'view' | 'sun' | 'privacy' | 'cost' | 'lessGrading' | 'access' | 'approval' | 'overall';
 
 export interface HomeResult {
   readonly ok: true;

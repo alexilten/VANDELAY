@@ -145,6 +145,18 @@ const groundUnder = (ctx: SiteContext, f: Frame, m: LocalModule, step = 1000): n
   return out;
 };
 
+/** Samples the ground under a module's own footprint (no deck), on a grid of about `step` mm. */
+const groundUnderModule = (ctx: SiteContext, f: Frame, m: LocalModule, step = 1000): number[] => {
+  const nu = Math.max(2, Math.ceil(m.length / step) + 1), nv = Math.max(2, Math.ceil(m.width / step) + 1);
+  const out: number[] = [];
+  for (let i = 0; i < nu; i++) {
+    for (let j = 0; j < nv; j++) {
+      out.push(ctx.ground(moduleToSite(f, m, -m.length / 2 + (m.length * i) / (nu - 1), -m.width / 2 + (m.width * j) / (nv - 1))));
+    }
+  }
+  return out;
+};
+
 /** Pier positions in a module's frame: both long edges, evenly spaced at or under the catalog spacing. */
 const pierPoints = (c: Catalog, length: number, vEdges: readonly number[]): [number, number][] => {
   const inset = c.pier.size / 2;
@@ -252,6 +264,15 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     return s + (g.reduce((a, z) => a + Math.abs(z - meanGround), 0) / g.length) * m.length * m.width;
   }, 0);
   const top = Math.max(...layout.modules.map((m, i) => ffl(i) + c.modules[m.kind].height));
+  const heightLowest = top - minGround;
+  // Greatest height of each module's roof above the existing grade directly below it.
+  const heightAbove = Math.max(...layout.modules.map((m, i) => {
+    const roof = ffl(i) + c.modules[m.kind].height;
+    return Math.max(...groundUnderModule(ctx, f, m).map((g) => roof - g));
+  }));
+  const heightMethod = body.site.zoning.heightMethod ?? 'lowestGrade';
+  const height = heightMethod === 'aboveGrade' ? heightAbove : heightLowest;
+  const heightWords = heightMethod === 'aboveGrade' ? 'above the grade directly below it' : 'above the lowest grade under it';
   const moduleCost = layout.modules.reduce((s, m) => s + c.modules[m.kind].costUnits, 0);
   const stairRise = steps.reduce((s, st) => s + st.rise, 0);
   const costIndex =
@@ -267,7 +288,11 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     bridgeLength: traced(bridge?.length ?? 0, 'mm', 'shortest level bridge from a floor edge to existing grade (0 = none found)', [`${P}/site/terrain`, `${P}/site/boundary`], ['vandelay.assumption.step-free-bridge']),
     stairCount: traced(steps.length, 'count', 'one stair at each join between pods at different floor levels', [`${P}/design/foundation`]),
     padEarthwork: traced(padEarthwork, 'mm3', 'earth a level pad under the footprint would move (cut + fill at mean grade). Not designed in v0: the home stands on piers', [`${P}/site/terrain`]),
-    height: traced(top - minGround, 'mm', 'top of roof minus lowest existing grade under the footprint', [`${P}/site/terrain`], ['vandelay.assumption.height-measurement']),
+    height: heightMethod === 'aboveGrade'
+      ? traced(heightAbove, 'mm', 'greatest height of the roof above the existing grade directly below it (zoning heightMethod: aboveGrade)', [`${P}/site/terrain`, `${P}/site/zoning/heightMethod`], ['vandelay.assumption.height-measurement'])
+      : traced(heightLowest, 'mm', 'top of roof minus lowest existing grade under the footprint (zoning heightMethod: lowestGrade, the default)', [`${P}/site/terrain`, `${P}/site/zoning`], ['vandelay.assumption.height-measurement']),
+    heightLowestGrade: traced(heightLowest, 'mm', 'top of roof minus lowest existing grade under the footprint', [`${P}/site/terrain`]),
+    heightAboveGrade: traced(heightAbove, 'mm', 'greatest height of the roof above the existing grade directly below it', [`${P}/site/terrain`]),
     costIndex: traced(costIndex, 'index', 'relative cost: (module weights + pier, bridge and stair metres × example weights) ÷ module weights. 1.00 = modules only. Not dollars', [`${P}/design/catalog`]),
   };
 
@@ -295,9 +320,9 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
       ? { ruleId: 'vandelay.assumption.height-measurement', status: 'n/a', message: 'No height limit in the intent.' }
       : {
           ruleId: 'vandelay.assumption.height-measurement',
-          status: top - minGround <= z.maxHeight ? 'pass' : 'fail',
+          status: height <= z.maxHeight ? 'pass' : 'fail',
           measured: quantities.height!, limit: z.maxHeight,
-          message: `Roof is ${Math.round(top - minGround)} mm above the lowest grade under it; the limit is ${z.maxHeight} mm.`,
+          message: `Roof is ${Math.round(height)} mm ${heightWords}; the limit is ${z.maxHeight} mm.`,
         },
   );
   const coverage = floorArea / ctx.lotArea;
@@ -383,16 +408,23 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     scores.access = traced(bridge ? 1 : 0, 'score', '1 when a short level bridge gives step-free entry, else 0', [`${P}/brief/stepFreeEntry`, `${P}/site/terrain`], ['vandelay.assumption.step-free-bridge']);
   }
 
+  // Fast-track (ministerial) approval matters a lot for an ADU: it saves months. Score it when the rules ran.
+  const fastTrack = checks.find((ch) => ch.ruleId === 'us-ca.adu.path.ministerial-detached');
+  if (fastTrack && fastTrack.status !== 'n/a') {
+    scores.approval = traced(fastTrack.status === 'pass' ? 1 : fastTrack.status === 'review' ? 0.5 : 0, 'score', '1 when the design qualifies for fast-track (ministerial) ADU approval, 0.5 when that needs review, else 0', [`${P}/brief/use`, `${P}/site/jurisdiction`], [fastTrack.ruleId]);
+  }
+
   const weights = body.brief.priorities;
   const ids = (Object.keys(scores) as ScoreId[]).filter((k) => k !== 'overall');
-  const anyWeight = ids.some((k) => k !== 'access' && (weights[k as keyof typeof weights] ?? 0) > 0);
+  const fixedWeight: Partial<Record<ScoreId, number>> = { access: 0.5, approval: 0.5 };
+  const anyWeight = ids.some((k) => fixedWeight[k] === undefined && (weights[k as keyof typeof weights] ?? 0) > 0);
   let wsum = 0, ssum = 0;
   for (const k of ids) {
-    // Step-free entry is a requirement in the brief, not a priority weight: it always counts half.
-    const w = k === 'access' ? 0.5 : anyWeight ? (weights[k as keyof typeof weights] ?? 0) : 1;
+    // Step-free entry and fast-track approval are requirements, not priority weights: each counts half when it applies.
+    const w = fixedWeight[k] ?? (anyWeight ? (weights[k as keyof typeof weights] ?? 0) : 1);
     wsum += w; ssum += w * scores[k]!.value;
   }
-  scores.overall = traced(wsum ? ssum / wsum : 0, 'score', 'weighted mean of the scores, weighted by the brief priorities (equal weights when none are set); step-free access counts 0.5 when the brief asks for it', [`${P}/brief/priorities`, `${P}/brief/stepFreeEntry`]);
+  scores.overall = traced(wsum ? ssum / wsum : 0, 'score', 'weighted mean of the scores, weighted by the brief priorities (equal weights when none are set); step-free access and fast-track ADU approval count 0.5 each when they apply', [`${P}/brief/priorities`, `${P}/brief/stepFreeEntry`, `${P}/brief/use`]);
 
   return {
     ok: true,

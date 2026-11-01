@@ -47,6 +47,12 @@ export interface SiteIntent {
     readonly maxHeight?: MmValue;
     /** Fraction of lot area, 0..1. */
     readonly maxCoverage?: number;
+    /**
+     * How the local code measures building height. 'lowestGrade' (default, conservative): top of
+     * roof above the lowest existing grade under the footprint. 'aboveGrade': the greatest height
+     * of the roof above the existing grade directly below it, as many hillside codes measure.
+     */
+    readonly heightMethod?: HeightMethod;
   };
   /** Where the path or driveway meets the lot. */
   readonly access?: { readonly point: Point2 };
@@ -63,6 +69,9 @@ export interface Jurisdiction {
   readonly region: string;
   readonly lot?: LotFacts;
 }
+
+export const HEIGHT_METHODS = ['lowestGrade', 'aboveGrade'] as const;
+export type HeightMethod = (typeof HEIGHT_METHODS)[number];
 
 export const USES = ['home', 'adu'] as const;
 export type Use = (typeof USES)[number];
@@ -243,7 +252,8 @@ const checkSite = (c: Checker, s: unknown, p: JsonPointer): void => {
   const zp = `${p}/zoning`;
   if (c.obj(s.zoning, zp)) {
     const z = s.zoning;
-    c.keys(z, ['setbacks', 'maxHeight', 'maxCoverage'], zp);
+    c.keys(z, ['setbacks', 'maxHeight', 'maxCoverage', 'heightMethod'], zp);
+    if (z.heightMethod !== undefined) c.oneOf(z.heightMethod, HEIGHT_METHODS, `${zp}/heightMethod`);
     if (c.obj(z.setbacks, `${zp}/setbacks`)) {
       c.keys(z.setbacks, ['front', 'side', 'rear'], `${zp}/setbacks`);
       for (const k of ['front', 'side', 'rear']) c.num(z.setbacks[k], `${zp}/setbacks/${k}`, { min: 0 });

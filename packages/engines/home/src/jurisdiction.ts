@@ -18,7 +18,8 @@ const lookup = regionLookup(REGIONS);
 /** Readings the engine makes when it turns its model into rule facts. Shown with every ADU result they touch. */
 export const ENGINE_INTERPRETATIONS = {
   livable: 'Interior livable space is taken as each module’s floor inside its walls (Vandelay reading; the catalog does not yet separate unconditioned space).',
-  height: 'Height is measured from the lowest existing grade under the footprint to the top of the roof (Vandelay assumption; the local code sets the method).',
+  height: 'Height is measured from the lowest existing grade under the footprint to the top of the roof (the default, conservative method; the local code sets the method, and the intent can choose aboveGrade instead).',
+  heightAbove: 'Height is measured as the greatest height of the roof above the existing grade directly below it, as the intent\'s zoning says the local code does (verify against the local code).',
   clearance: 'Clearances are measured from the module walls to each lot line; the deck, bridge and roof eaves are not counted (Vandelay reading). Raised decks and eaves may count toward setbacks under local code; see the projections check.',
 } as const;
 
@@ -118,9 +119,11 @@ const traceFor = (r: RuleCheck, f: DerivedFacts): Traced | undefined => {
     : { value: r.measured, unit, formula: 'measured by the rule from the engine facts', reads: [`${P}/site`], rules: [r.ruleId] };
 };
 
-const interpretationsFor = (r: RuleCheck): string[] => {
+const interpretationsFor = (r: RuleCheck, intent: HomeIntent): string[] => {
   const out = [...r.interpretations];
-  if (r.ruleId.includes('.height.')) out.push(ENGINE_INTERPRETATIONS.height);
+  if (r.ruleId.includes('.height.') || r.ruleId.includes('.path.')) {
+    out.push(intent.body.site.zoning.heightMethod === 'aboveGrade' ? ENGINE_INTERPRETATIONS.heightAbove : ENGINE_INTERPRETATIONS.height);
+  }
   if (r.ruleId.includes('.size.') || r.ruleId.includes('.path.')) out.push(ENGINE_INTERPRETATIONS.livable);
   if (r.ruleId.includes('.setback.') || r.ruleId.includes('.path.')) out.push(ENGINE_INTERPRETATIONS.clearance);
   return out;
@@ -214,7 +217,7 @@ export const jurisdictionChecks = (
         message: r.message,
         why: r.why,
         citations: r.citations,
-        interpretations: interpretationsFor(r),
+        interpretations: interpretationsFor(r, intent),
         ...(measured ? { measured } : {}),
         ...(r.limit !== undefined ? { limit: r.limit } : {}),
       };
