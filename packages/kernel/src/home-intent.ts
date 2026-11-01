@@ -283,17 +283,20 @@ const checkSite = (c: Checker, s: unknown, p: JsonPointer): void => {
     const lp = `${jp}/lot`;
     if (j.lot !== undefined && c.obj(j.lot, lp)) {
       const l = j.lot;
-      c.keys(l, ['zoning', 'primary', 'primaryExists', 'primaryMultistory', 'primaryFloorArea', 'lotArea', 'existingFootprint', 'nearTransit', 'roofPitchMatchesPrimary'], lp);
+      c.keys(l, ['zoning', 'primary', 'primaryExists', 'primaryMultistory', 'primaryFloorArea', 'lotArea', 'existingFootprint', 'nearTransit', 'roofPitchMatchesPrimary', ...PARKING_EXEMPTIONS], lp);
       c.oneOf(l.zoning, ['single-family', 'multifamily', 'mixed-use', 'other'] as const, `${lp}/zoning`);
       c.oneOf(l.primary, ['single-family', 'multifamily', 'none'] as const, `${lp}/primary`);
       if (typeof l.primaryExists !== 'boolean') c.fail(`${lp}/primaryExists`, 'must be true or false');
-      for (const k of ['primaryMultistory', 'nearTransit', 'roofPitchMatchesPrimary']) {
+      for (const k of ['primaryMultistory', 'nearTransit', 'roofPitchMatchesPrimary', ...PARKING_EXEMPTIONS]) {
         if (l[k] !== undefined && typeof l[k] !== 'boolean') c.fail(`${lp}/${k}`, 'must be true or false');
       }
       for (const k of ['primaryFloorArea', 'lotArea', 'existingFootprint']) if (l[k] !== undefined) c.num(l[k], `${lp}/${k}`, { min: 0 });
     }
   }
 };
+
+/** Lot facts that exempt an ADU from parking (Gov. Code § 66322(a)); see kernel/rules/adu.ts. */
+const PARKING_EXEMPTIONS = ['nearPublicTransit', 'historicDistrict', 'onStreetPermitsWithheld', 'carShareWithinOneBlock', 'filedWithNewPrimary'] as const;
 
 const checkBrief = (c: Checker, b: unknown, p: JsonPointer): void => {
   if (!c.obj(b, p)) return;
