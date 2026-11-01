@@ -81,6 +81,9 @@ export const frontRotation = (intent: HomeIntent): number => {
 
 interface Frame { readonly anchor: Point2; readonly rotation: number }
 
+/** A straight run of retaining wall beside benched module `i`, centred at (u, v) in its frame, running along its X (0) or Y (90). */
+interface RetainingWall { readonly i: number; readonly u: number; readonly v: number; readonly along: 0 | 90; readonly length: number; readonly height: number; readonly base: number }
+
 const toSite = (f: Frame, p: Point2): Point2 => {
   const q = rotate2(p, f.rotation);
   return [f.anchor[0] + q[0], f.anchor[1] + q[1]];
@@ -140,7 +143,7 @@ export interface Choice {
   readonly parti: Parti;
   readonly anchor: Point2;
   readonly rotation: number;
-  readonly foundation: 'piers' | 'steppedPods';
+  readonly foundation: 'piers' | 'steppedPods' | 'benched';
 }
 
 /** What the engine picks for each 'auto' field when evaluating a single intent without a search. */
@@ -199,18 +202,24 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
   const f: Frame = { anchor: choice.anchor, rotation: choice.rotation };
   const layout = orientDecks(ctx, planned, f);
   const pods = choice.foundation === 'piers' ? layout.modules.map(() => 0) : layout.modules.map((m) => m.wing);
+  const benched = choice.foundation === 'benched';
   const podIds = [...new Set(pods)].sort((a, b) => a - b);
   const clear = RULES['vandelay.assumption.floor-clearance'].value;
   const levels = body.design.levels;
   const maxStep = levels.maxStep === 'auto' ? RULES['vandelay.assumption.pod-step'].value : levels.maxStep;
 
-  // Floor level per pod: the lowest finished floor that keeps the underside clear of grade under every module in it.
+  // Floor level per pod. On piers: the lowest finished floor that keeps the underside clear of grade under every
+  // module in it. Benched: the floor slab sits on a level bench cut down to the lowest grade under the pod's modules.
   const under = layout.modules.map((m) => groundUnder(ctx, f, m));
+  const underModule = layout.modules.map((m) => groundUnderModule(ctx, f, m));
   const datum = new Map<number, number>();
   for (const pod of podIds) {
     if (levels.floorDatum !== 'auto') { datum.set(pod, levels.floorDatum); continue; }
-    let need = -Infinity;
-    layout.modules.forEach((m, i) => { if (pods[i] === pod) need = Math.max(need, Math.max(...under[i]!) + clear + c.floorDepth); });
+    let need = benched ? Infinity : -Infinity;
+    layout.modules.forEach((m, i) => {
+      if (pods[i] !== pod) return;
+      need = benched ? Math.min(need, Math.min(...underModule[i]!) + c.floorDepth) : Math.max(need, Math.max(...under[i]!) + clear + c.floorDepth);
+    });
     datum.set(pod, Math.ceil(need / 10) * 10);
   }
   const ffl = (i: number) => datum.get(pods[i]!)!;
@@ -225,21 +234,60 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     };
   });
 
-  // Piers under each module, plus a row along the outer edge of the deck.
+  // Piers under each module, plus a row along the outer edge of the deck. A benched module bears on its slab, so only its deck stands on piers.
   const piers: Pier[] = [];
+  const deckPier = new Set<number>();
   layout.modules.forEach((m, i) => {
     const top = ffl(i) - c.floorDepth;
     const deck = deckSides(m, c);
-    const edges = [-m.width / 2, m.width / 2];
+    const edges = benched ? [] : [-m.width / 2, m.width / 2];
     if (deck[0]) edges.push(-m.width / 2 - deck[0] + c.pier.size / 2);
     if (deck[1]) edges.push(m.width / 2 + deck[1] - c.pier.size / 2);
     for (const [u, v] of pierPoints(c, m.length, edges)) {
       const vv = Math.abs(v) === m.width / 2 ? v - Math.sign(v) * (c.pier.size / 2) : v;
       const at = moduleToSite(f, m, u, vv);
       const g = ground(at);
+      // Where grade stands above a benched deck, the bench runs on under it and the deck bears on the ground: no pier.
+      if (benched && top - g < 0) continue;
+      if (benched) deckPier.add(piers.length);
       piers.push({ id: `${m.id}/pier-${piers.length}`, at: [r0(at[0]), r0(at[1])], ground: r0(g), top: r0(top), height: r0(top - g), module: m.id });
     }
   });
+
+  // Benched pods: the cut under each module, and board-formed concrete retaining walls wherever grade stands above the bench.
+  const walls: RetainingWall[] = [];
+  let cutVolume = 0, wallArea = 0, maxCut = 0;
+  if (benched) {
+    const prints = layout.modules.map((m) => footprint(f, m));
+    layout.modules.forEach((m, i) => {
+      const bench = ffl(i) - c.floorDepth;
+      // The bench runs under the module and its deck.
+      const [d0, d1] = deckSides(m, c);
+      const cuts = under[i]!.map((z) => Math.max(0, z - bench));
+      maxCut = Math.max(maxCut, ...cuts);
+      cutVolume += (cuts.reduce((a, b) => a + b, 0) / cuts.length) * m.length * (m.width + d0 + d1);
+      const t = c.bench.wall;
+      for (const [u0, v0, du, dv, len] of [
+        [-m.length / 2, -m.width / 2 - t / 2, 1, 0, m.length], [-m.length / 2, m.width / 2 + t / 2, 1, 0, m.length],
+        [-m.length / 2 - t / 2, -m.width / 2, 0, 1, m.width], [m.length / 2 + t / 2, -m.width / 2, 0, 1, m.width],
+      ] as const) {
+        const n = Math.max(2, Math.ceil(len / 500) + 1);
+        let lo = Infinity, hi = -Infinity, top = 0, sum = 0, free = 0;
+        for (let k = 0; k < n; k++) {
+          const s = (len * k) / (n - 1);
+          const p = moduleToSite(f, m, u0 + du * s, v0 + dv * s);
+          // Where another module adjoins, there is no open face to retain.
+          if (prints.some((q, j) => j !== i && insideConvex(q, p, t))) continue;
+          const h = Math.max(0, ground(p) - bench);
+          free++; sum += h;
+          if (h > 50) { lo = Math.min(lo, s); hi = Math.max(hi, s); top = Math.max(top, h); }
+        }
+        if (!free) continue;
+        wallArea += (sum / n) * len;
+        if (hi > lo) walls.push({ i, u: u0 + du * (lo + hi) / 2, v: v0 + dv * (lo + hi) / 2, along: du ? 0 : 90, length: hi - lo + t, height: top, base: bench });
+      }
+    });
+  }
 
   // Steps between adjoining pods.
   const byId = new Map(layout.modules.map((m, i) => [m.id, i] as const));
@@ -273,14 +321,15 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     }
   });
 
-  const solids = buildSolids(c, f, layout, ffl, piers, steps, bridge);
+  const solids = buildSolids(c, f, layout, ffl, piers, steps, bridge, walls);
 
   // ── quantities
   const floorArea = layout.modules.reduce((s, m) => s + m.length * m.width, 0);
   const interiorArea = layout.modules.reduce((s, m) => s + (m.length - 2 * c.wall) * (m.width - 2 * c.wall), 0);
   const pierLength = piers.reduce((s, p) => s + Math.max(0, p.height), 0);
   const maxPier = piers.reduce((s, p) => Math.max(s, p.height), 0);
-  const minPierHeight = piers.reduce((s, p) => Math.min(s, p.height), Infinity);
+  // A benched deck may sit right on grade, so its piers need no clearance, only to stay out of the ground.
+  const minPierHeight = piers.reduce((s, p, k) => (deckPier.has(k) ? s : Math.min(s, p.height)), Infinity);
   const allGround = under.flat();
   const minGround = Math.min(...allGround);
   const meanGround = allGround.reduce((s, g) => s + g, 0) / allGround.length;
@@ -301,7 +350,8 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
   const moduleCost = layout.modules.reduce((s, m) => s + c.modules[m.kind].costUnits, 0);
   const stairRise = steps.reduce((s, st) => s + st.rise, 0);
   const costIndex =
-    (moduleCost + (pierLength / 1000) * c.costPerMetre.pier + ((bridge?.length ?? 0) / 1000) * c.costPerMetre.bridge + (stairRise / 1000) * c.costPerMetre.stair) /
+    (moduleCost + (pierLength / 1000) * c.costPerMetre.pier + ((bridge?.length ?? 0) / 1000) * c.costPerMetre.bridge + (stairRise / 1000) * c.costPerMetre.stair +
+      (cutVolume / 1e9) * c.bench.costPerCubicMetre + (wallArea / 1e6) * c.bench.costPerSquareMetre) /
     moduleCost;
 
   const quantities: Record<string, Traced> = {
@@ -319,7 +369,10 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
       : traced(heightLowest, 'mm', 'top of roof minus lowest existing grade under the footprint (zoning heightMethod: lowestGrade, the default)', [`${P}/site/terrain`, `${P}/site/zoning`], ['vandelay.assumption.height-measurement']),
     heightLowestGrade: traced(heightLowest, 'mm', 'top of roof minus lowest existing grade under the footprint', [`${P}/site/terrain`]),
     heightAboveGrade: traced(heightAbove, 'mm', 'greatest height of the roof above the existing grade directly below it', [`${P}/site/terrain`]),
-    costIndex: traced(costIndex, 'index', 'relative cost: (module weights + pier, bridge and stair metres × example weights) ÷ module weights. 1.00 = modules only. Not dollars', [`${P}/design/catalog`]),
+    costIndex: traced(costIndex, 'index', 'relative cost: (module weights + pier, bridge and stair metres, bench cut m³ and retaining wall m² × example weights) ÷ module weights. 1.00 = modules only. Not dollars', [`${P}/design/catalog`]),
+    cutVolume: traced(cutVolume, 'mm3', 'earth cut to bench the pods into the slope, under the modules and their decks (0 on piers)', [`${P}/site/terrain`, `${P}/design/foundation`], ['vandelay.assumption.bench-cut']),
+    maxCut: traced(maxCut, 'mm', 'deepest cut below existing grade under a benched module or its deck (0 on piers)', [`${P}/site/terrain`, `${P}/design/foundation`], ['vandelay.assumption.bench-cut']),
+    retainingWallArea: traced(wallArea, 'mm2', 'face area of retaining wall where grade stands above a bench, open faces only (0 on piers)', [`${P}/site/terrain`, `${P}/design/foundation`]),
   };
 
   // ── checks
@@ -328,6 +381,11 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
   const allPlan: Point2[] = [
     ...layout.modules.flatMap((m) => footprint(f, m, deckSides(m, c))),
     ...piers.map((p) => p.at),
+    ...walls.flatMap((w) => {
+      const m = layout.modules[w.i]!;
+      const [hu, hv] = w.along === 0 ? [w.length / 2, c.bench.wall / 2] : [c.bench.wall / 2, w.length / 2];
+      return ([[-hu, -hv], [hu, -hv], [hu, hv], [-hu, hv]] as const).map(([a, b]) => moduleToSite(f, m, w.u + a, w.v + b));
+    }),
   ];
   const margin = ctx.buildable.length >= 3 ? Math.min(...allPlan.map((p) => convexMargin(ctx.buildable, p))) : -Infinity;
   checks.push(
@@ -381,12 +439,25 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
     ruleId: 'vandelay.assumption.pier-height', status: maxPier <= pierLimit ? 'pass' : 'fail', measured: quantities.maxPierHeight!, limit: pierLimit,
     message: `Tallest pier is ${Math.round(maxPier)} mm; the assumed limit is ${pierLimit} mm.`,
   });
-  checks.push({
-    ruleId: 'vandelay.assumption.floor-clearance', status: minPierHeight >= clear - 0.5 ? 'pass' : 'fail',
-    measured: traced(minPierHeight, 'mm', 'smallest gap between floor underside and grade', [`${P}/site/terrain`, `${P}/design/levels/floorDatum`], ['vandelay.assumption.floor-clearance']),
-    limit: clear,
-    message: minPierHeight >= clear - 0.5 ? 'The floor clears the ground everywhere.' : `The floor is only ${Math.round(minPierHeight)} mm above the ground in places.`,
-  });
+  checks.push(
+    benched
+      ? { ruleId: 'vandelay.assumption.floor-clearance', status: 'pass', message: 'The floors bear on slabs on the bench; no floor stands over open ground.' }
+      : {
+          ruleId: 'vandelay.assumption.floor-clearance', status: minPierHeight >= clear - 0.5 ? 'pass' : 'fail',
+          measured: traced(minPierHeight, 'mm', 'smallest gap between floor underside and grade', [`${P}/site/terrain`, `${P}/design/levels/floorDatum`], ['vandelay.assumption.floor-clearance']),
+          limit: clear,
+          message: minPierHeight >= clear - 0.5 ? 'The floor clears the ground everywhere.' : `The floor is only ${Math.round(minPierHeight)} mm above the ground in places.`,
+        },
+  );
+  const cutLimit = RULES['vandelay.assumption.bench-cut'].value;
+  checks.push(
+    !benched
+      ? { ruleId: 'vandelay.assumption.bench-cut', status: 'n/a', message: 'The home stands on piers, with no cut.' }
+      : {
+          ruleId: 'vandelay.assumption.bench-cut', status: maxCut <= cutLimit + 0.5 ? 'pass' : 'fail', measured: quantities.maxCut!, limit: cutLimit,
+          message: `The deepest cut is ${(maxCut / 1000).toFixed(1)} m, with ${(wallArea / 1e6).toFixed(0)} m² of retaining wall; the assumed limit is ${(cutLimit / 1000).toFixed(1)} m.`,
+        },
+  );
   const maxRise = steps.reduce((s, st) => Math.max(s, st.rise), 0);
   checks.push(
     podIds.length < 2
@@ -408,6 +479,7 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
   const facts = deriveFacts(intent, c, modules, quantities.height!, ctx.lotArea);
   const juris = jurisdictionChecks(intent, facts, ctx.lotArea, solids, ground);
   checks.push(...juris.checks);
+  if (benched) checks.push({ ruleId: 'vandelay.review.grading', status: 'review', message: RULES['vandelay.review.grading'].statement });
   checks.push({ ruleId: 'vandelay.review.structure', status: 'review', message: RULES['vandelay.review.structure'].statement });
   checks.push({ ruleId: 'vandelay.review.delivery', status: 'review', message: RULES['vandelay.review.delivery'].statement });
 
@@ -428,7 +500,8 @@ export const evaluateChoice = (ctx: SiteContext, choice: Choice, layoutIn?: Loca
   const livingCtr = toSite(f, [living.cx, living.cy]);
   const streetDist = -((livingCtr[0] - fa[0]) * fn[0] + (livingCtr[1] - fa[1]) * fn[1]);
   scores.privacy = traced(clamp01(streetDist / 15000), 'score', 'distance from the living module to the street edge ÷ 15 m, capped at 1', [`${P}/site/frontEdge`, `${P}/design/placement/anchor`]);
-  scores.lessGrading = traced(clamp01(1 - pierLength / piers.length / pierLimit), 'score', '1 − mean pier height ÷ pier height limit (lighter touch on the ground scores higher)', [`${P}/site/terrain`], ['vandelay.assumption.pier-height']);
+  const meanPier = piers.length ? pierLength / piers.length : 0;
+  scores.lessGrading = traced(clamp01(1 - meanPier / pierLimit - cutVolume / floorArea / cutLimit), 'score', '1 − mean pier height ÷ pier height limit − mean bench cut depth ÷ cut limit (lighter touch on the ground scores higher)', [`${P}/site/terrain`, `${P}/design/foundation`], ['vandelay.assumption.pier-height', 'vandelay.assumption.bench-cut']);
   scores.cost = traced(clamp01(2 - costIndex), 'score', '2 − relative cost index, clamped to 0..1', [`${P}/design/catalog`]);
   if (body.brief.stepFreeEntry) {
     scores.access = traced(bridge ? 1 : 0, 'score', '1 when a short level bridge gives step-free entry, else 0', [`${P}/brief/stepFreeEntry`, `${P}/site/terrain`], ['vandelay.assumption.step-free-bridge']);
@@ -491,6 +564,7 @@ const buildSolids = (
   piers: readonly Pier[],
   steps: readonly { a: number; b: number; rise: number }[],
   bridge: { i: number; u: number; v: number; dir: Point2; length: number } | undefined,
+  walls: readonly RetainingWall[] = [],
 ): Solid[] => {
   const solids: Solid[] = [];
   const box = (
@@ -542,6 +616,13 @@ const buildSolids = (
         mechanism: { kind: 'slide', axis: [r4(axis[0]), r4(axis[1])], travel: r0(gl - sl) },
       });
     }
+  });
+
+  // Board-formed concrete retaining walls holding the slope back from benched modules.
+  walls.forEach((w, k) => {
+    const m = layout.modules[w.i]!;
+    const [du, dv] = w.along === 0 ? [w.length, c.bench.wall] : [c.bench.wall, w.length];
+    box(`${m.id}/retaining-${k}`, 'plinth', 'concrete', m, w.u, w.v, w.base - c.floorDepth, du, dv, w.height + c.floorDepth);
   });
 
   for (const p of piers) {

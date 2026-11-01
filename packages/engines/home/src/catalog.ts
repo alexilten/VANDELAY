@@ -41,6 +41,8 @@ export interface Catalog {
   readonly pier: { readonly size: number; readonly spacing: number };
   /** Relative cost weights for site work, per metre of pier, bridge or stair (example weights). */
   readonly costPerMetre: { readonly pier: number; readonly bridge: number; readonly stair: number };
+  /** Benched pods: retaining wall thickness, and example cost weights per m³ of cut and per m² of retaining wall. */
+  readonly bench: { readonly wall: number; readonly costPerCubicMetre: number; readonly costPerSquareMetre: number };
 }
 
 export const EXAMPLE_CATALOG: Catalog = {
@@ -59,6 +61,7 @@ export const EXAMPLE_CATALOG: Catalog = {
   deck: { depth: 2400, side: 'downhill' },
   pier: { size: 450, spacing: 3000 },
   costPerMetre: { pier: 0.15, bridge: 0.6, stair: 0.4 },
+  bench: { wall: 300, costPerCubicMetre: 0.06, costPerSquareMetre: 0.12 },
 };
 
 export const CATALOGS: Readonly<Record<string, Catalog>> = { [`${EXAMPLE_CATALOG.id}@${EXAMPLE_CATALOG.version}`]: EXAMPLE_CATALOG };

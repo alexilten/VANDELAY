@@ -65,6 +65,14 @@ export const RULES = {
     id: 'vandelay.assumption.projections-in-setback', topic: 'Raised decks and eaves', kind: 'assumption', source: ASSUMPTION, verification: 'n/a',
     statement: 'Flags for review a raised deck (over about 30 in above grade) or roof eave within the 4 ft side or rear clearance; local code decides whether it counts.', value: 762,
   },
+  'vandelay.assumption.bench-cut': {
+    id: 'vandelay.assumption.bench-cut', topic: 'Bench cut', kind: 'assumption', source: ASSUMPTION, verification: 'n/a',
+    statement: 'A benched pod is cut no deeper than this into existing grade, so its retaining walls stay a modest, single-storey structure.', value: 2400,
+  },
+  'vandelay.review.grading': {
+    id: 'vandelay.review.grading', topic: 'Cut and retaining walls', kind: 'engineer-review', source: 'Always referred to a geotechnical and a structural engineer', verification: 'n/a',
+    statement: 'Benching cuts into the slope. The cut, the retaining walls, drainage behind them and the slab need a soils report and engineering, and usually a grading permit from the city.',
+  },
   'vandelay.review.structure': {
     id: 'vandelay.review.structure', topic: 'Structure and soils', kind: 'engineer-review', source: 'Always referred to a licensed engineer', verification: 'n/a',
     statement: 'Pier sizes, bracing, footings and soils are conceptual and need engineering.',

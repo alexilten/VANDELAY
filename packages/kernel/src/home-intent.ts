@@ -98,7 +98,8 @@ export interface Brief {
 export const PARTIS = ['bar', 'L', 'courtyard', 'steppedBar'] as const;
 export type Parti = (typeof PARTIS)[number];
 
-export const FOUNDATIONS = ['auto', 'piers', 'steppedPods'] as const;
+/** 'benched': each pod sits on a level bench cut into the slope, held by board-formed concrete retaining walls. */
+export const FOUNDATIONS = ['auto', 'piers', 'steppedPods', 'benched'] as const;
 export type FoundationChoice = (typeof FOUNDATIONS)[number];
 
 export interface HomeDesign {
