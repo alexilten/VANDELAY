@@ -5,6 +5,8 @@ import { EXAMPLES } from '../data/examples';
 import { useMedia } from '../lib/useMedia';
 import { ViewerPanel } from '../viewer/ViewerPanel';
 import { optionGeometry } from '../viewer/source';
+import { liveHome } from '../engine/home';
+import { Checks } from './Checks';
 import { SiteMap } from './SiteMap';
 
 type Props = {
@@ -31,10 +33,17 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
   const [open, setOpen] = useState<Record<WidgetKey, boolean>>(() => ({ site: !compact, brief: !compact, options: true }));
   const toggle = (k: WidgetKey) => setOpen((o) => ({ ...o, [k]: !o[k] }));
 
-  const siteSummary = [address || 'Example site', ex.site[0]?.[1]].filter(Boolean).join(' · ');
+  // Home runs the real engine on an example site; other categories show example data.
+  const live = useMemo(() => (category === 'home' ? liveHome(brief, picks) : null), [category, brief, picks]);
+  const options = live?.options ?? ex.options;
+  const site = live?.site ?? ex.site;
+  const siteSummary = [address || 'Example site', site[0]?.[1]].filter(Boolean).join(' · ');
   const briefSummary = ex.questions.map((q, i) => q.options[picks[i] ?? q.initial]).join(' · ');
-  const pick = ex.options[chosen] ?? ex.options[0];
-  const geometry = useMemo(() => optionGeometry(category, chosen, picks), [category, chosen, picks]);
+  const pick = options[chosen] ?? options[0];
+  const geometry = useMemo(
+    () => live?.options[chosen]?.geometry ?? optionGeometry(category, chosen, picks),
+    [live, category, chosen, picks],
+  );
 
   return (
     <div className="v-work">
@@ -85,7 +94,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
               <div className="v-site__body">
                 <SiteMap />
                 <dl className="v-facts">
-                  {ex.site.map(([k, v]) => (
+                  {site.map(([k, v]) => (
                     <div key={k}>
                       <dt>{k}</dt>
                       <dd>{v}</dd>
@@ -122,9 +131,11 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
           open={open.options}
           onToggle={() => toggle('options')}
         >
-          <ViewerPanel category={category} option={chosen} optionName={pick.name} geometry={geometry} />
+          <ViewerPanel category={category} option={chosen} optionName={pick.name} geometry={geometry} engine={Boolean(live)}>
+            {live?.options[chosen] ? <Checks checks={live.options[chosen].checks} /> : null}
+          </ViewerPanel>
           <div className="v-options" role="radiogroup" aria-label="Options">
-            {ex.options.map((o, i) => (
+            {options.map((o, i) => (
               <button
                 key={o.name}
                 type="button"

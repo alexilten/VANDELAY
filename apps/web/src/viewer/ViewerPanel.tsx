@@ -32,10 +32,14 @@ type Props = {
   option: number;
   optionName: string;
   geometry: OptionGeometry;
+  /** True when the geometry comes from a real engine (still on an example site). */
+  engine?: boolean;
+  /** Overlay controls, e.g. the checks chip. */
+  children?: ReactNode;
 };
 
 /** The live model of the chosen option, with a 2D sketch while it loads or when 3D isn't available. */
-export function ViewerPanel({ category, option, optionName, geometry }: Props) {
+export function ViewerPanel({ category, option, optionName, geometry, engine = false, children }: Props) {
   const webgl = useMemo(hasWebGL, []);
   const [touched, setTouched] = useState(false);
   const fallback = (
@@ -47,21 +51,22 @@ export function ViewerPanel({ category, option, optionName, geometry }: Props) {
     <div
       className="v-viewer"
       role="img"
-      aria-label={`Example 3D model: ${optionName}. Drag to look around.`}
+      aria-label={`${engine ? 'Engine-generated 3D model on an example site' : 'Example 3D model'}: ${optionName}. Drag to look around.`}
       onPointerDown={() => setTouched(true)}
     >
       {webgl ? (
         <Guard fallback={fallback}>
           <Suspense fallback={fallback}>
-            <Viewer3D geometry={geometry} modelKey={`${category}-${option}`} />
+            <Viewer3D geometry={geometry} modelKey={`${category}-${option}-${geometry.solids.length}`} />
           </Suspense>
         </Guard>
       ) : (
         fallback
       )}
       <div className="v-viewer__tags">
-        <ExampleTag>Example model</ExampleTag>
+        <ExampleTag>{engine ? 'Engine model · example site' : 'Example model'}</ExampleTag>
       </div>
+      {children}
       {webgl ? <span className={`v-viewer__hint ${touched ? 'is-hidden' : ''}`}>Drag to look around</span> : null}
     </div>
   );

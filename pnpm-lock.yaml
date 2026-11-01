@@ -26,6 +26,12 @@ importers:
       '@react-three/fiber':
         specifier: ^9.8.2
         version: 9.8.2(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(three@0.187.0)
+      '@vandelay/agent':
+        specifier: workspace:*
+        version: link:../../packages/agent
+      '@vandelay/engine-home':
+        specifier: workspace:*
+        version: link:../../packages/engines/home
       '@vandelay/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
