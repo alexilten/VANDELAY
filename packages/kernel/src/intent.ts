@@ -3,12 +3,16 @@
  * and cost are all derived from it, so every intent document carries an
  * explicit schema version.
  *
- * This file only defines the versioned envelope. The real v0 schema is
- * proposed separately and lands in its own PR.
+ * This file defines the versioned envelope shared by every category. The
+ * category bodies live beside it (Home: `home-intent.ts`).
+ *
+ * Version history
+ *   0.0.0  envelope only
+ *   0.1.0  Home body: site, brief, design, sources (intent schema v0)
  */
 
 export const INTENT_SCHEMA = 'vandelay.intent' as const;
-export const INTENT_SCHEMA_VERSION = '0.0.0' as const;
+export const INTENT_SCHEMA_VERSION = '0.1.0' as const;
 
 export const CATEGORIES = ['home', 'business', 'mixed-use', 'venue'] as const;
 export type Category = (typeof CATEGORIES)[number];
