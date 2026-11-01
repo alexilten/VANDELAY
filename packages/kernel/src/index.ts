@@ -8,3 +8,4 @@ export * from './patch.ts';
 export * from './examples.ts';
 export * from './plan.ts';
 export * from './terrain.ts';
+export * from './rules/index.ts';

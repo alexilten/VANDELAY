@@ -30,7 +30,7 @@ export const EXAMPLES: Record<CategoryId, ExampleCategory> = {
     questions: [
       { label: 'Size', options: ['1 bed', '2 bed', '3 bed', '4+ bed'], initial: 1 },
       { label: 'Budget', options: ['< $250k', '$250–400k', '$400–600k', '$600k+'], initial: 1 },
-      { label: 'Built', options: ['Modular', 'Panelised', 'Site-built', 'Best fit'], initial: 3 },
+      { label: 'Type', options: ['Main home', 'Backyard ADU'], initial: 1 },
     ],
     options: [
       { name: 'Two modules on the slope', headline: '$338k', headlineLabel: 'estimate', metrics: [['Area', '940 sf'], ['Ready in', '18 weeks'], ['Zoning', 'Fits']], bestFit: true },

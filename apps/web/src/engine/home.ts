@@ -8,7 +8,7 @@
  */
 import { optionsFromPrompt } from '@vandelay/agent';
 import { RULES, type CheckResult, type HomeOption } from '@vandelay/engine-home';
-import { EXAMPLE_SITES, type SiteIntent } from '@vandelay/kernel';
+import { EXAMPLE_CA_LOT, EXAMPLE_SITES, US_CA, type SiteIntent } from '@vandelay/kernel';
 import type { Fact } from '../data/examples';
 import type { OptionGeometry } from '../viewer/geometry';
 
@@ -25,7 +25,7 @@ export interface CheckView {
   readonly formula?: string;
   /** For cited rules: a sentence naming the code section. */
   readonly why?: string;
-  readonly citations: readonly { readonly label: string; readonly url: string }[];
+  readonly citations: readonly { readonly label: string; readonly url: string; readonly verification: 'primary' | 'secondary' | 'unverified' }[];
   /** Readings that are Vandelay's interpretation, not settled law. Shown as unverified. */
   readonly interpretations: readonly string[];
 }
@@ -45,7 +45,8 @@ export interface LiveHome {
   readonly site: readonly Fact[];
 }
 
-const SITE: SiteIntent = EXAMPLE_SITES.slopeAlong;
+// Example site with example California lot facts, so ADU briefs get the cited state rules.
+const SITE: SiteIntent = { ...EXAMPLE_SITES.slopeAlong, jurisdiction: EXAMPLE_CA_LOT };
 const BEDS = ['one bedroom', 'two bedroom', 'three bedroom', 'four bedroom'];
 const SQFT_PER_MM2 = 1 / 92_903.04;
 
@@ -54,13 +55,14 @@ export function homePrompt(brief: string, picks: readonly number[]): string {
   const parts = [brief || 'A small home on a sloped lot'];
   parts.push(BEDS[picks[0] ?? 1] ?? 'two bedroom');
   if ((picks[1] ?? 1) === 0) parts.push('on a budget');
+  if ((picks[2] ?? 1) === 1) parts.push('as a backyard ADU');
   return parts.join(', ');
 }
 
 const compass = (deg: number) => ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 const m = (mm: number) => `${+(mm / 1000).toFixed(1)} m`;
 
-function siteFacts(site: SiteIntent): Fact[] {
+function siteFacts(site: SiteIntent, adu: boolean): Fact[] {
   const xs = site.boundary.map((p) => p[0]);
   const ys = site.boundary.map((p) => p[1]);
   const w = Math.max(...xs) - Math.min(...xs);
@@ -73,21 +75,20 @@ function siteFacts(site: SiteIntent): Fact[] {
     ['Slope', slope],
     ['Setbacks', `${m(s.front)} / ${m(s.side)} / ${m(s.rear)}`],
   ];
-  if (site.zoning.maxHeight) facts.push(['Height limit', m(site.zoning.maxHeight)]);
+  if (adu && site.jurisdiction?.region === 'us-ca') facts.push(['Rules', 'California ADU law']);
+  else if (site.zoning.maxHeight) facts.push(['Height limit', m(site.zoning.maxHeight)]);
   return facts;
 }
 
 const ORDER: Record<CheckStatus, number> = { fail: 0, warn: 1, review: 2, pass: 3, 'n/a': 4 };
 
-// Cited fields arrive with the jurisdiction rules work; read them only when present.
-type CitedCheck = CheckResult & {
-  readonly why?: string;
-  readonly citations?: readonly { readonly code?: string; readonly section?: string; readonly title?: string; readonly url?: string }[];
-  readonly interpretations?: readonly string[];
-};
+// Titles for cited state rules, by id.
+const CITED = new Map(US_CA.rules.map((r) => [r.id, r]));
 
-export function checkView(c: CitedCheck): CheckView {
-  const r = (RULES as Record<string, { topic: string; statement: string; source: string; kind: string } | undefined>)[c.ruleId];
+export function checkView(c: CheckResult): CheckView {
+  const engineRule = (RULES as Record<string, { topic: string; statement: string; source: string; kind: string } | undefined>)[c.ruleId];
+  const cited = CITED.get(c.ruleId);
+  const r = engineRule ?? (cited ? { topic: cited.title, statement: cited.summary, source: cited.kind === 'assumption' ? 'Vandelay assumption, not law' : US_CA.name, kind: cited.kind } : undefined);
   return {
     id: c.ruleId,
     status: c.status,
@@ -95,9 +96,7 @@ export function checkView(c: CitedCheck): CheckView {
     ...(r ? { rule: { topic: r.topic, statement: r.statement, source: r.source, kind: r.kind } } : {}),
     ...(c.measured?.formula ? { formula: c.measured.formula } : {}),
     ...(c.why ? { why: c.why } : {}),
-    citations: (c.citations ?? [])
-      .filter((x) => x.url)
-      .map((x) => ({ label: [x.code, x.section].filter(Boolean).join(' ') || x.title || 'Source', url: x.url! })),
+    citations: (c.citations ?? []).map((x) => ({ label: `${x.code} ${x.section}`, url: x.url, verification: x.verification })),
     interpretations: c.interpretations ?? [],
   };
 }
@@ -131,7 +130,7 @@ export function liveHome(brief: string, picks: readonly number[]): LiveHome | nu
     const scores = options.map((o) => o.result.scores.overall?.value ?? 0);
     const best = scores.indexOf(Math.max(...scores));
     const live = options.slice(0, 3).map((o, i) => toLive(o, i === best)) as unknown as LiveHome['options'];
-    return { options: live, site: siteFacts(SITE) };
+    return { options: live, site: siteFacts(SITE, (picks[2] ?? 1) === 1) };
   } catch {
     return null;
   }

@@ -70,6 +70,7 @@ export function Checks({ checks }: { checks: readonly CheckView[] }) {
                     {c.citations.map((x, i) => (
                       <a key={i} href={x.url} target="_blank" rel="noreferrer">
                         {x.label}
+                        {x.verification === 'primary' ? '' : x.verification === 'secondary' ? ' (secondary source)' : ' (unverified)'}
                       </a>
                     ))}
                   </p>
