@@ -137,7 +137,7 @@ describe('evaluate', () => {
 
   it('responds to an agent patch: turning the home changes the view score', () => {
     const base = cache.get('slopeAlong')![0]!;
-    const turned = patchHomeIntent(base.intent, [{ op: 'replace', path: '/body/design/placement/rotation', value: (base.result.resolved.rotation + 180) % 360 }]);
+    const turned = patchHomeIntent(base.intent, [{ op: 'replace', path: '/body/design/placement/rotation', value: (base.result.resolved.rotation + 90) % 360 }]);
     if (!turned.ok) throw new Error('patch failed');
     const r = evaluate(turned.value);
     expect(r.ok && r.scores.view!.value).not.toBe(base.result.scores.view!.value);
