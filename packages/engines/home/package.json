@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Home typology engine: turns a home intent into geometry and checks. Stub until the v0 plan is agreed.",
+  "description": "Home typology engine v0: modular units on a sloped lot. Turns a Home intent into placed modules, piers, solids, quantities, checks and scores.",
   "exports": { ".": "./src/index.ts" },
   "scripts": { "typecheck": "tsc -p tsconfig.json" },
   "dependencies": { "@vandelay/kernel": "workspace:*" }

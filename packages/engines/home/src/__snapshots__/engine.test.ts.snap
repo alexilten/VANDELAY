@@ -1,0 +1,171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`determinism > pins the example results (update the snapshot only on purpose) 1`] = `
+{
+  "flat": [
+    {
+      "hash": "439224b37362c5aaf511fdf0b1b0e91b14cf55dcf1b279b46384f2f466fe03d7",
+      "label": "L around a deck",
+      "resolved": {
+        "anchor": [
+          11441,
+          18004,
+        ],
+        "floorDatums": [
+          750,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "L",
+        "rotation": 330,
+      },
+    },
+    {
+      "hash": "ca724ccc538f8172c0ba7fa4103e8a871b68d9f16008e9282be2da81a044dcfb",
+      "label": "Courtyard",
+      "resolved": {
+        "anchor": [
+          8441,
+          15004,
+        ],
+        "floorDatums": [
+          750,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "courtyard",
+        "rotation": 105,
+      },
+    },
+    {
+      "hash": "2ee4251c2f3ea78905bbc55c4be0fe9817c4546f7d8129a781c7054659ce5b1e",
+      "label": "Long bar on piers",
+      "resolved": {
+        "anchor": [
+          6941,
+          18004,
+        ],
+        "floorDatums": [
+          750,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "bar",
+        "rotation": 90,
+      },
+    },
+  ],
+  "slopeAlong": [
+    {
+      "hash": "8f1ff04592458b9b5ae4ed6ff2bb7f9dd8ba24e342e09e174e8b53293e534d89",
+      "label": "L around a deck",
+      "resolved": {
+        "anchor": [
+          11441,
+          18004,
+        ],
+        "floorDatums": [
+          4890,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "L",
+        "rotation": 330,
+      },
+    },
+    {
+      "hash": "d5bfa8220288015f6af440b670371fad35c475ac502db0130f3f94f37565bdd6",
+      "label": "Courtyard",
+      "resolved": {
+        "anchor": [
+          8441,
+          15004,
+        ],
+        "floorDatums": [
+          4220,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "courtyard",
+        "rotation": 105,
+      },
+    },
+    {
+      "hash": "2be757aaec605656c018e33afe32955b583ab8b8ce0736fbf91a996f157fd555",
+      "label": "Stepped bar down the slope",
+      "resolved": {
+        "anchor": [
+          3941,
+          18004,
+        ],
+        "floorDatums": [
+          5260,
+          4540,
+          3820,
+          2920,
+        ],
+        "foundation": "steppedPods",
+        "maxStep": 1200,
+        "parti": "steppedBar",
+        "rotation": 270,
+      },
+    },
+  ],
+  "slopeCross": [
+    {
+      "hash": "e9c850734450dd76bed0f7d52f42db2d54362dc1abbc732ad4934f9b334fa31d",
+      "label": "Stepped bar down the slope",
+      "resolved": {
+        "anchor": [
+          5441,
+          18004,
+        ],
+        "floorDatums": [
+          -770,
+          -480,
+          -260,
+          -180,
+        ],
+        "foundation": "steppedPods",
+        "maxStep": 1200,
+        "parti": "steppedBar",
+        "rotation": 270,
+      },
+    },
+    {
+      "hash": "68e1fa8843c6ac4a69b6af24a964f5fa3390f108c4f7d0a330984da624ace7ab",
+      "label": "Long bar on piers",
+      "resolved": {
+        "anchor": [
+          5441,
+          18004,
+        ],
+        "floorDatums": [
+          -180,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "bar",
+        "rotation": 270,
+      },
+    },
+    {
+      "hash": "06d729026df10c506fb3cd823e41683b13aec693a142a4691d8ed333305f49f1",
+      "label": "Courtyard",
+      "resolved": {
+        "anchor": [
+          8441,
+          13504,
+        ],
+        "floorDatums": [
+          -360,
+        ],
+        "foundation": "piers",
+        "maxStep": 1200,
+        "parti": "courtyard",
+        "rotation": 270,
+      },
+    },
+  ],
+}
+`;
