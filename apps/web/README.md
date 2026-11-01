@@ -14,17 +14,21 @@ pnpm --filter @vandelay/web build  # CI sets BASE_PATH for GitHub Pages
 
 ## Design system
 
-Apple-style: white, frosted glass, soft colour light, the system font with
-Inter as fallback, very little text and a full dark mode.
+Scandinavian minimal, inspired by Linear's restraint: a quiet paper field
+(near-black in dark mode), hairline rules instead of shadows, tight radii and
+one signal colour, safety orange, used only for the logo ridge, the chosen
+option and panel ticks. Type is Inter for text, Inter Tight for display and
+JetBrains Mono for the small uppercase technical labels. Panels are numbered
+like a drawing set. The logo is a placeholder: a hard hat drawn in three lines.
 
 - `src/design/tokens.css` holds every colour, radius, space, type and motion
   value as a `--v-*` CSS variable. Components never hard-code a colour.
 - Dark mode follows the OS by default. The theme button cycles
   system → light → dark and stores the choice (`src/lib/theme.ts`), which sets
   `<html data-theme>`.
-- `src/design/components/` holds the building blocks: `Glass`, `PromptField`,
+- `src/design/components/` holds the building blocks: `Glass` (a hairline panel; the name is historical), `PromptField`,
   `CategoryTile`, `AppIcon`, `Widget` (collapsible panel), `Segmented`,
-  `Pill`, `Button`, `ExampleTag`, `ThemeToggle`, `AmbientLight`, `Logo`.
+  `Pill`, `Button`, `ExampleTag`, `ThemeToggle`, `AmbientLight` (a faint drafting grid), `Logo`.
 
 ## Layout
 
@@ -48,7 +52,7 @@ loads, and wherever WebGL is missing.
 - Buildings follow the project's architecture standard: timber volumes on
   blackened steel piers, deep steel roof plates, glass toward the view,
   weathered-steel accents and concrete where they meet the slope. Moving parts
-  (sliding shutters) animate. The UI around them stays Apple-neutral.
+  (sliding shutters) animate. The UI around them stays neutral.
 
 ## Example data
 

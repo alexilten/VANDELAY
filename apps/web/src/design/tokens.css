@@ -1,65 +1,72 @@
 /*
  * Vandelay design tokens.
- * One calm white field, frosted glass, soft colour light. Every component reads
- * from these variables; nothing else in the app should hard-code a colour.
+ * Scandinavian minimal: a quiet paper field, near-black ink, hairline rules and
+ * one signal colour (safety orange, from the hard hat) used sparingly. Bold
+ * display type, mono labels for the technical layer. Every component reads from
+ * these variables; nothing else in the app should hard-code a colour.
  *
  * Theming: light is the default. Dark follows the OS unless the person picks a
  * theme, which sets <html data-theme="light|dark">.
  */
 :root {
   /* Colour: surfaces and ink */
-  --v-color-bg: #ffffff;
-  --v-color-ink: #1d1d1f;
-  --v-color-ink-2: #6e6e73;
-  --v-color-ink-3: #8e8e93;
-  --v-color-hairline: rgba(0, 0, 0, 0.08);
-  --v-color-accent: #0071e3;
+  --v-color-bg: #f6f6f4;
+  --v-color-surface: #ffffff;
+  --v-color-surface-2: #f0f0ee;
+  --v-color-ink: #0c0c0d;
+  --v-color-ink-2: #5d5e63;
+  --v-color-ink-3: #8b8c91;
+  --v-color-hairline: rgba(12, 12, 13, 0.09);
+  --v-color-line: rgba(12, 12, 13, 0.16);
+  --v-color-grid: rgba(12, 12, 13, 0.045);
+  --v-color-accent: #f2541b;
   --v-color-on-accent: #ffffff;
+  --v-color-ok: #2f9e5b;
+  --v-color-warn: #d98a0b;
+  --v-color-bad: #d93a2b;
 
-  /* Glass */
-  --v-glass: rgba(255, 255, 255, 0.58);
-  --v-glass-strong: rgba(255, 255, 255, 0.78);
-  --v-glass-edge: rgba(255, 255, 255, 0.9);
-  --v-glass-blur: blur(28px) saturate(180%);
-  --v-glass-blur-soft: blur(20px) saturate(180%);
+  /* Surfaces (the old "glass" names now mean solid panels) */
+  --v-glass: var(--v-color-surface);
+  --v-glass-strong: var(--v-color-surface-2);
+  --v-glass-edge: var(--v-color-hairline);
+  --v-glass-blur: none;
+  --v-glass-blur-soft: none;
 
-  /* Ambient light blobs */
-  --v-light-1: #9cc8ff;
-  --v-light-2: #ffc9a8;
-  --v-light-3: #b9f0d7;
-  --v-light-4: #d8c6ff;
-  --v-light-opacity: 0.55;
-
-  /* Elevation */
-  --v-shadow: 0 1px 1px rgba(0, 0, 0, 0.03), 0 12px 40px -12px rgba(0, 0, 0, 0.14);
-  --v-shadow-icon: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 16px -6px rgba(0, 0, 0, 0.3);
+  /* Elevation: almost none. Lines do the work. */
+  --v-shadow: 0 1px 0 rgba(12, 12, 13, 0.03);
+  --v-shadow-pop: 0 16px 48px -16px rgba(12, 12, 13, 0.22);
 
   /* Brand: the hard hat in the logo */
-  --v-brand-hat-a: #ffd23f;
-  --v-brand-hat-b: #ffa00a;
-  --v-brand-hat-ridge: #e68a00;
+  --v-brand: var(--v-color-ink);
+  --v-brand-hat-a: var(--v-color-accent);
+  --v-brand-hat-b: var(--v-color-accent);
+  --v-brand-hat-ridge: var(--v-color-accent);
 
-  /* Category gradients (one app-style icon per category) */
-  --v-cat-home: linear-gradient(160deg, var(--v-cat-home-a), var(--v-cat-home-b));
-  --v-cat-business: linear-gradient(160deg, var(--v-cat-business-a), var(--v-cat-business-b));
-  --v-cat-mixed-use: linear-gradient(160deg, var(--v-cat-mixed-use-a), var(--v-cat-mixed-use-b));
-  --v-cat-venue: linear-gradient(160deg, var(--v-cat-venue-a), var(--v-cat-venue-b));
-  /* The same stops as plain colours, for SVG fills */
-  --v-cat-home-a: #5ac8fa; --v-cat-home-b: #0a84ff;
-  --v-cat-business-a: #ffb340; --v-cat-business-b: #ff7a1a;
-  --v-cat-mixed-use-a: #5fe08a; --v-cat-mixed-use-b: #20b26b;
-  --v-cat-venue-a: #c38bff; --v-cat-venue-b: #7d4cf0;
+  /* Categories are monochrome now; kept as tokens so a tint can come back later. */
+  --v-cat-home: var(--v-color-ink);
+  --v-cat-business: var(--v-color-ink);
+  --v-cat-mixed-use: var(--v-color-ink);
+  --v-cat-venue: var(--v-color-ink);
+  /* Two stops per category for SVG sketches: a grey ramp, so the sketches stay monochrome. */
+  --v-cat-home-a: var(--v-color-ink-3); --v-cat-home-b: var(--v-color-ink);
+  --v-cat-business-a: var(--v-color-ink-3); --v-cat-business-b: var(--v-color-ink);
+  --v-cat-mixed-use-a: var(--v-color-ink-3); --v-cat-mixed-use-b: var(--v-color-ink);
+  --v-cat-venue-a: var(--v-color-ink-3); --v-cat-venue-b: var(--v-color-ink);
 
   /* Type */
-  --v-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
-  --v-text-body: 17px;
-  --v-text-small: 15px;
+  --v-font: "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --v-font-display: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  --v-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --v-text-body: 15px;
+  --v-text-small: 14px;
   --v-text-fine: 12px;
-  --v-text-title: clamp(30px, 4.6vw, 48px);
-  --v-text-display: clamp(40px, 7vw, 80px);
-  --v-leading: 1.47;
-  --v-tracking: -0.022em;
-  --v-tracking-tight: -0.045em;
+  --v-text-label: 10.5px;
+  --v-text-title: clamp(28px, 4vw, 44px);
+  --v-text-display: clamp(44px, 7.4vw, 92px);
+  --v-leading: 1.5;
+  --v-tracking: -0.011em;
+  --v-tracking-tight: -0.048em;
+  --v-tracking-label: 0.08em;
 
   /* Space (4px grid) */
   --v-space-1: 4px;
@@ -72,20 +79,20 @@
   --v-space-8: 36px;
   --v-space-9: 40px;
 
-  /* Radius */
-  --v-radius-sm: 9px;
-  --v-radius-icon: 16px;
-  --v-radius-md: 18px;
-  --v-radius-lg: 28px;
-  --v-radius-pill: 999px;
+  /* Radius: tight and architectural */
+  --v-radius-sm: 4px;
+  --v-radius-icon: 6px;
+  --v-radius-md: 6px;
+  --v-radius-lg: 8px;
+  --v-radius-pill: 6px;
 
   /* Motion */
-  --v-ease-spring: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --v-dur-fast: 160ms;
-  --v-dur: 220ms;
+  --v-ease-spring: cubic-bezier(0.25, 0.9, 0.3, 1);
+  --v-dur-fast: 120ms;
+  --v-dur: 200ms;
 
   /* Layout */
-  --v-page-max: 1040px;
+  --v-page-max: 1120px;
   --v-gutter: 20px;
 
   color-scheme: light;
@@ -93,38 +100,40 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --v-color-bg: #000000;
-    --v-color-ink: #f5f5f7;
-    --v-color-ink-2: #a1a1a6;
-    --v-color-ink-3: #86868b;
-    --v-color-hairline: rgba(255, 255, 255, 0.1);
-    --v-color-accent: #2997ff;
-    --v-glass: rgba(40, 40, 44, 0.5);
-    --v-glass-strong: rgba(48, 48, 52, 0.72);
-    --v-glass-edge: rgba(255, 255, 255, 0.12);
-    --v-light-1: #1f4fa8;
-    --v-light-2: #8a3f1e;
-    --v-light-3: #17694b;
-    --v-light-4: #4b2e9a;
-    --v-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8);
+    --v-color-bg: #08090a;
+    --v-color-surface: #101112;
+    --v-color-surface-2: #17181a;
+    --v-color-ink: #f4f5f5;
+    --v-color-ink-2: #8d9097;
+    --v-color-ink-3: #62656c;
+    --v-color-hairline: rgba(255, 255, 255, 0.07);
+    --v-color-line: rgba(255, 255, 255, 0.14);
+    --v-color-grid: rgba(255, 255, 255, 0.035);
+    --v-color-accent: #ff6a33;
+    --v-color-ok: #3fb96f;
+    --v-color-warn: #e6a23c;
+    --v-color-bad: #f0564a;
+    --v-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+    --v-shadow-pop: 0 20px 60px -16px rgba(0, 0, 0, 0.8);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --v-color-bg: #000000;
-  --v-color-ink: #f5f5f7;
-  --v-color-ink-2: #a1a1a6;
-  --v-color-ink-3: #86868b;
-  --v-color-hairline: rgba(255, 255, 255, 0.1);
-  --v-color-accent: #2997ff;
-  --v-glass: rgba(40, 40, 44, 0.5);
-  --v-glass-strong: rgba(48, 48, 52, 0.72);
-  --v-glass-edge: rgba(255, 255, 255, 0.12);
-  --v-light-1: #1f4fa8;
-  --v-light-2: #8a3f1e;
-  --v-light-3: #17694b;
-  --v-light-4: #4b2e9a;
-  --v-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.8);
+  --v-color-bg: #08090a;
+  --v-color-surface: #101112;
+  --v-color-surface-2: #17181a;
+  --v-color-ink: #f4f5f5;
+  --v-color-ink-2: #8d9097;
+  --v-color-ink-3: #62656c;
+  --v-color-hairline: rgba(255, 255, 255, 0.07);
+  --v-color-line: rgba(255, 255, 255, 0.14);
+  --v-color-grid: rgba(255, 255, 255, 0.035);
+  --v-color-accent: #ff6a33;
+  --v-color-ok: #3fb96f;
+  --v-color-warn: #e6a23c;
+  --v-color-bad: #f0564a;
+  --v-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+  --v-shadow-pop: 0 20px 60px -16px rgba(0, 0, 0, 0.8);
   color-scheme: dark;
 }

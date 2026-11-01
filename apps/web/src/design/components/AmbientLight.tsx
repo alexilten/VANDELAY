@@ -1,4 +1,4 @@
-/** Soft colour light drifting behind the glass. Decorative only. */
+/** Faint drafting grid behind the page. Decorative only. */
 export function AmbientLight() {
   return (
     <div className="v-light" aria-hidden="true">

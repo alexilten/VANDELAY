@@ -77,6 +77,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
         <div className="v-work__side">
           <Widget
             title="Site"
+            index="01"
             summary={siteSummary}
             aside={<ExampleTag />}
             open={open.site}
@@ -106,7 +107,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
             </div>
           </Widget>
 
-          <Widget title="Your brief" summary={briefSummary} open={open.brief} onToggle={() => toggle('brief')}>
+          <Widget title="Your brief" index="02" summary={briefSummary} open={open.brief} onToggle={() => toggle('brief')}>
             <div className="v-questions">
               {ex.questions.map((q, qi) => (
                 <div className="v-q" key={q.label}>
@@ -126,6 +127,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
         <Widget
           className="v-work__options"
           title="Three ways to build it"
+          index="03"
           summary={pick.name}
           aside={<ExampleTag>Examples</ExampleTag>}
           open={open.options}
