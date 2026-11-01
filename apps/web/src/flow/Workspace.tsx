@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AppIcon, Button, ExampleTag, Pill, PromptField, Segmented, Widget } from '../design/components';
 import { CATEGORY_IDS, CATEGORY_NAMES, type CategoryId } from '../design/categories';
 import { EXAMPLES } from '../data/examples';
 import { useMedia } from '../lib/useMedia';
-import { Massing } from './Massing';
+import { ViewerPanel } from '../viewer/ViewerPanel';
+import { optionGeometry } from '../viewer/source';
 import { SiteMap } from './SiteMap';
 
 type Props = {
@@ -33,6 +34,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
   const siteSummary = [address || 'Example site', ex.site[0]?.[1]].filter(Boolean).join(' · ');
   const briefSummary = ex.questions.map((q, i) => q.options[picks[i] ?? q.initial]).join(' · ');
   const pick = ex.options[chosen] ?? ex.options[0];
+  const geometry = useMemo(() => optionGeometry(category, chosen, picks), [category, chosen, picks]);
 
   return (
     <div className="v-work">
@@ -120,6 +122,7 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
           open={open.options}
           onToggle={() => toggle('options')}
         >
+          <ViewerPanel category={category} option={chosen} optionName={pick.name} geometry={geometry} />
           <div className="v-options" role="radiogroup" aria-label="Options">
             {ex.options.map((o, i) => (
               <button
@@ -130,7 +133,6 @@ export function Workspace({ category, brief, onCategory, onBrief }: Props) {
                 className="v-opt"
                 onClick={() => setChosen(i)}
               >
-                <Massing category={category} index={i} />
                 <Pill tone={o.bestFit ? 'accent' : 'plain'}>{o.bestFit ? 'Best fit' : `Option ${'ABC'[i]}`}</Pill>
                 <h3>{o.name}</h3>
                 <div className="v-opt__big">
