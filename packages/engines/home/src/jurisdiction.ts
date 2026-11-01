@@ -20,6 +20,7 @@ export const ENGINE_INTERPRETATIONS = {
   livable: 'Interior livable space is taken as each module’s floor inside its walls (Vandelay reading; the catalog does not yet separate unconditioned space).',
   height: 'Height is measured from the lowest existing grade under the footprint to the top of the roof (the default, conservative method; the local code sets the method, and the intent can choose aboveGrade instead).',
   heightAbove: 'Height is measured as the greatest height of the roof above the existing grade directly below it, as the intent\'s zoning says the local code does (verify against the local code).',
+  parking: 'Parking spaces are taken from the brief (brief.parking; none when it is left out). The v0 engine does not yet place or draw parking on the site (Vandelay reading).',
   clearance: 'Clearances are measured from the module walls to each lot line; the deck, bridge and roof eaves are not counted (Vandelay reading). Raised decks and eaves may count toward setbacks under local code; see the projections check.',
 } as const;
 
@@ -94,6 +95,7 @@ export const aduInput = (intent: HomeIntent, facts: DerivedFacts, lotArea: numbe
       totalFloorArea: facts.totalFloorArea.value,
       footprintArea: facts.footprintArea.value,
       bedrooms: intent.body.brief.bedrooms,
+      ...(intent.body.brief.parking !== undefined ? { parkingSpaces: intent.body.brief.parking } : {}),
       height: facts.height.value,
       stories: 1,
       clearances: { front: facts.clearances.front.value, side: facts.clearances.side.value, rear: facts.clearances.rear.value },
@@ -126,6 +128,7 @@ const interpretationsFor = (r: RuleCheck, intent: HomeIntent): string[] => {
   }
   if (r.ruleId.includes('.size.') || r.ruleId.includes('.path.')) out.push(ENGINE_INTERPRETATIONS.livable);
   if (r.ruleId.includes('.setback.') || r.ruleId.includes('.path.')) out.push(ENGINE_INTERPRETATIONS.clearance);
+  if (r.ruleId.endsWith('.parking')) out.push(ENGINE_INTERPRETATIONS.parking);
   return out;
 };
 

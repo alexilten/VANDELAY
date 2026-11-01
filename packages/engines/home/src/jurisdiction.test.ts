@@ -9,7 +9,7 @@ const opts = (i: HomeIntent) => {
   return r;
 };
 const patched = (i: HomeIntent, path: string, value: unknown) => {
-  const r = patchHomeIntent(i, [{ op: path.endsWith('/use') || path.endsWith('/jurisdiction') ? 'add' : 'replace', path, value }]);
+  const r = patchHomeIntent(i, [{ op: path.endsWith('/use') || path.endsWith('/jurisdiction') || path.endsWith('/parking') ? 'add' : 'replace', path, value }]);
   if (!r.ok) throw new Error(JSON.stringify(r.issues));
   return r.value;
 };
@@ -89,6 +89,26 @@ describe('California ADU rules on Home options', () => {
     expect(high.message).toMatch(/raised deck \(side\)/);
     expect(high.measured?.value).toBe(300);
     expect(projectionCheck(intent, [deck(400)], ground).status).toBe('pass');
+  });
+
+  it('checks the parking the brief provides, and passes any parking exemption through', () => {
+    const park = (i: HomeIntent) => opts(i)[0]!.result.checks.find((c) => c.ruleId === 'us-ca.adu.parking')!;
+    const none = park(exampleAduIntent('flat'));
+    expect(none.status).toBe('review');
+    expect(none.interpretations?.some((t) => t.includes('brief.parking'))).toBe(true);
+    const one = park(patched(exampleAduIntent('flat'), '/body/brief/parking', 1));
+    expect(one.status).toBe('pass');
+    expect(one.measured?.value).toBe(1);
+    const lot = exampleAduIntent('flat').body.site.jurisdiction!.lot!;
+    const exempt = park(patched(exampleAduIntent('flat'), '/body/site/jurisdiction/lot', { ...lot, nearPublicTransit: true }));
+    expect(exempt.status).toBe('pass');
+    expect(exempt.why).toMatch(/66322/);
+  });
+
+  it('rejects a parking exemption that is not true or false', () => {
+    const i = exampleAduIntent('flat');
+    const bad = applyPatch(i, [{ op: 'add', path: '/body/site/jurisdiction/lot/historicDistrict', value: 'yes' }]);
+    expect(bad.ok && validateHomeIntent(bad.value).some((e) => e.path.endsWith('/historicDistrict'))).toBe(true);
   });
 
   it('says plainly when the rules for this use or region are not loaded', () => {
