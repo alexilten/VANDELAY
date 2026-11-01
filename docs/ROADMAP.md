@@ -2,7 +2,7 @@
 
 The roadmap is a sequence of **gated phases**. A phase is done when its gate is met, not when its time window ends. Time windows are targets measured from the start of the project.
 
-See [VISION.md](./VISION.md) for the why.
+See [VISION.md](./VISION.md) for the why, and [MASTER_PLAN.md](./MASTER_PLAN.md) for how the phases line up with funding stages, metrics and risks.
 
 ## Overview
 
