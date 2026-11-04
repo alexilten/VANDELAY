@@ -46,7 +46,9 @@ describe.each(SITES)('options on the example %s site', (site) => {
       for (const p of r.piers) {
         expect(p.top).toBe(floors.get(p.module)! - EXAMPLE_CATALOG.floorDepth);
         expect(p.height).toBe(p.top - p.ground);
-        expect(p.height).toBeGreaterThanOrEqual(RULES['vandelay.assumption.floor-clearance'].value - 1);
+        // A benched deck may sit close to grade; piers under floors on piers keep the full clearance.
+        const min = r.resolved.foundation === 'benched' ? 0 : RULES['vandelay.assumption.floor-clearance'].value - 1;
+        expect(p.height).toBeGreaterThanOrEqual(min);
         expect(p.height).toBeLessThanOrEqual(RULES['vandelay.assumption.pier-height'].value);
       }
     }
@@ -55,7 +57,9 @@ describe.each(SITES)('options on the example %s site', (site) => {
   it('emits finite, whole-millimetre solids in the architectural palette', () => {
     for (const { result: r } of opts) {
       const roles = new Set(r.geometry.solids.map((s) => s.role));
-      for (const role of ['module', 'wall', 'roof', 'glazing', 'pier', 'deck', 'shutter'] as const) expect(roles).toContain(role);
+      for (const role of ['module', 'wall', 'roof', 'glazing', 'deck', 'shutter'] as const) expect(roles).toContain(role);
+      // A benched home may need no piers at all; its retaining walls take their place.
+      expect(roles).toContain(r.resolved.foundation === 'benched' ? 'plinth' : 'pier');
       for (const s of r.geometry.solids) {
         expect(Object.keys(MATERIALS)).toContain(s.material);
         for (const v of [...s.center, ...s.size]) expect(Number.isInteger(v)).toBe(true);

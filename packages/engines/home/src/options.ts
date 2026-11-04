@@ -24,11 +24,21 @@ const prng = (seed: number) => {
 };
 
 const FOUNDATIONS_FOR: Record<Parti, readonly Choice['foundation'][]> = {
-  bar: ['piers'],
-  steppedBar: ['steppedPods'],
-  L: ['piers', 'steppedPods'],
-  courtyard: ['piers', 'steppedPods'],
+  bar: ['piers', 'benched'],
+  steppedBar: ['steppedPods', 'benched'],
+  L: ['piers', 'steppedPods', 'benched'],
+  courtyard: ['piers', 'steppedPods', 'benched'],
 };
+
+const BENCHED_LABEL: Record<Parti, string> = {
+  bar: 'Long bar set into the slope',
+  steppedBar: 'Stepped bar cut into the slope',
+  L: 'L around a deck, set into the slope',
+  courtyard: 'Courtyard, set into the slope',
+};
+
+/** A cut shallower than the piers' floor clearance gains nothing over piers, so the search skips it. */
+const MIN_USEFUL_CUT = 450;
 
 const LABEL: Record<Parti, string> = {
   bar: 'Long bar on piers',
@@ -97,6 +107,7 @@ export const proposeOptions = (intent: HomeIntent, opts: SearchOptions = {}): Ho
           }
           // Stepped pods that all land at one level are the same home as the single-level version: skip the duplicate.
           if (foundation === 'steppedPods' && new Set(res.resolved.floorDatums).size < 2) continue;
+          if (foundation === 'benched' && res.quantities.maxCut!.value < MIN_USEFUL_CUT) continue;
           all.push({ choice, result: res, order: order++ });
         }
       }
@@ -134,7 +145,7 @@ export const proposeOptions = (intent: HomeIntent, opts: SearchOptions = {}): Ho
     const resolved = resolveIntent(intent, choice);
     const result = evaluateWithDefaults(resolved) as HomeResult;
     const stepped = choice.foundation === 'steppedPods' && choice.parti !== 'steppedBar';
-    const base = `${LABEL[choice.parti]}${stepped ? ', stepped' : ''}`;
+    const base = choice.foundation === 'benched' ? BENCHED_LABEL[choice.parti] : `${LABEL[choice.parti]}${stepped ? ', stepped' : ''}`;
     // A second option of the same kind is named by how far it is turned from the first.
     const first = seen.get(base);
     if (first === undefined) seen.set(base, choice.rotation);

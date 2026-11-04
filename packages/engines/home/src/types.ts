@@ -97,7 +97,7 @@ export interface HomeResult {
     readonly parti: Parti;
     readonly anchor: Point2;
     readonly rotation: number;
-    readonly foundation: 'piers' | 'steppedPods';
+    readonly foundation: 'piers' | 'steppedPods' | 'benched';
     readonly floorDatums: readonly number[];
     readonly maxStep: number;
   };
